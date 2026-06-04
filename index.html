@@ -14,11 +14,15 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-gray-100 transform transition-all">
             <div class="text-4xl mb-3">🧺</div>
             <h2 class="text-2xl font-bold text-gray-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-gray-500 mb-6">ระบบบัญชีรายรับ-รายจ่าย v0.01</p>
+            <p class="text-sm text-gray-500 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน</p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.111C18.29 1.157 15.485 0 12.24 0 5.58 0 0 5.37 0 12s5.58 12 12.24 12c6.96 0 11.57-4.854 11.57-11.77 0-.789-.085-1.39-.188-1.945H12.24z"/>
+                </svg>
                 ลงชื่อเข้าใช้ด้วย Google Account
             </button>
+            <p class="text-xs text-gray-400 mt-6">ระบบความปลอดภัยขับเคลื่อนโดย Firebase Auth</p>
         </div>
     </div>
 
@@ -32,7 +36,15 @@
                 </div>
             </div>
             
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 sm:gap-6">
+                <div class="flex items-center gap-2.5 border-r border-gray-800 pr-4 sm:pr-6">
+                    <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-sky-400 bg-gray-700 shrink-0 shadow-xs">
+                    <div class="hidden sm:block overflow-hidden max-w-[150px]">
+                        <p id="user-name" class="text-xs font-semibold text-gray-100 truncate">กำลังโหลด...</p>
+                        <p id="user-email" class="text-[9px] text-gray-400 truncate -mt-0.5">กำลังโหลด...</p>
+                    </div>
+                </div>
+                
                 <button id="btn-logout" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-red-500/30 hover:border-transparent cursor-pointer">
                     🚪 ออกระบบ
                 </button>
@@ -41,12 +53,151 @@
     </header>
 
     <main id="main-app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">ระบบบัญชี S2 ซักอบรีด (v0.01) 🧺</h1>
-        
-        </main>
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">ระบบบัญชีรายรับ-รายจ่าย ร้าน S2 ซักอบรีด 🧺</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-green-50 p-6 rounded-2xl border border-green-200 shadow-xs">
+                <p class="text-sm font-medium text-green-600">รายรับรวม (ปี <span class="view-year"></span>)</p>
+                <p class="text-3xl font-bold text-green-700 mt-2">฿<span id="total-income">0.00</span></p>
+            </div>
+            <div class="bg-red-50 p-6 rounded-2xl border border-red-200 shadow-xs">
+                <p class="text-sm font-medium text-red-600">รายจ่ายรวม (ปี <span class="view-year"></span>)</p>
+                <p class="text-3xl font-bold text-red-700 mt-2">฿<span id="total-expense">0.00</span></p>
+            </div>
+            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200 shadow-xs">
+                <p class="text-sm font-medium text-blue-600">กำไรสุทธิ (ปี <span class="view-year"></span>)</p>
+                <p class="text-3xl font-bold text-blue-700 mt-2">฿<span id="net-profit">0.00</span></p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+                <h3 class="text-lg font-semibold">กราฟสรุปรายเดือนประจำปี <span id="current-year"></span></h3>
+                <div class="flex items-center gap-2 text-sm">
+                    <label for="year-filter" class="font-medium text-gray-600">เลือกปีที่ต้องการดู:</label>
+                    <select id="year-filter" class="p-1.5 border border-gray-300 rounded-md bg-white font-medium shadow-xs">
+                    </select>
+                </div>
+            </div>
+            <div class="h-64">
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 h-fit">
+                <h3 class="text-lg font-semibold mb-4" id="form-title">บันทึกรายการใหม่</h3>
+                <form id="finance-form" class="space-y-4">
+                    <input type="hidden" id="edit-id" value="">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">วันที่</label>
+                        <input type="date" id="date" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ประเภท</label>
+                        <select id="type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                            <option value="income">รายรับ (ค่าบริการซักรีด)</option>
+                            <option value="expense">รายจ่าย (ผงซักฟอก/ค่าน้ำไฟ/ค่าแรง)</option>
+                        </select>
+                    </div>
+                    <div id="payment-method-container">
+                        <label class="block text-sm font-medium text-gray-700">ช่องทางการชำระเงิน</label>
+                        <select id="payment-method" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs bg-white font-medium">
+                            <option value="เงินโอน">💰 เงินโอน</option>
+                            <option value="เงินสด">💵 เงินสด</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">รายละเอียดรายการ</label>
+                        <input type="text" id="description" placeholder="เช่น ซักผ้าห่ม 3 ผืน" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">จำนวนเงิน (บาท)</label>
+                        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">หมายเหตุ (ถ้ามี)</label>
+                        <input type="text" id="notes" placeholder="หมายเหตุเพิ่มเติม" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <button type="submit" id="btn-submit" class="w-full bg-sky-600 text-white p-2 rounded-md font-medium hover:bg-sky-700 transition cursor-pointer">บันทึกข้อมูล</button>
+                        <button type="button" id="btn-cancel-edit" class="w-full bg-gray-200 text-gray-700 p-2 rounded-md font-medium hover:bg-gray-300 transition hidden cursor-pointer">ยกเลิกการแก้ไข</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 lg:col-span-2">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-gray-100 mb-6 gap-4 bg-gray-50 p-4 rounded-xl">
+                    <div>
+                        <h3 class="text-md font-semibold text-gray-700">เรียกดูข้อมูลตามช่วงเวลา</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">*ระบบจะกรองตั้งแต่วันต้นปีให้อัตโนมัติ</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-sm">
+                        <input type="date" id="filter-start" class="p-1.5 border border-gray-300 rounded-md bg-white w-[135px] sm:w-auto">
+                        <span class="text-gray-500">ถึง</span>
+                        <input type="date" id="filter-end" class="p-1.5 border border-gray-300 rounded-md bg-white w-[135px] sm:w-auto">
+                        <button id="btn-clear-date" class="bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-md text-xs font-medium hover:bg-gray-300 transition cursor-pointer shrink-0">ล้างค่า</button>
+                        <button id="btn-export" class="bg-emerald-600 text-white px-3 py-1.5 rounded-md font-medium hover:bg-emerald-700 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-xs">
+                            📊 Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto min-h-[300px]">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
+                                <th class="p-3 w-12">ลำดับ</th>
+                                <th class="p-3 cursor-pointer hover:bg-gray-100" id="th-date">วันที่ <span id="sort-icon-date">🔽</span></th>
+                                <th class="p-3">รายการ</th>
+                                <th class="p-3">ประเภท</th>
+                                <th class="p-3 text-center">ช่องทางชำระเงิน</th>
+                                <th class="p-3 text-right cursor-pointer hover:bg-gray-100" id="th-amount">จำนวนเงิน <span id="sort-icon-amount" class="text-gray-400"></span></th>
+                                <th class="p-3 text-center w-24">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center justify-between mt-4 text-sm border-t border-gray-100 pt-4">
+                    <span id="page-info" class="text-gray-600 font-medium">กำลังโหลด...</span>
+                    <div class="flex gap-2">
+                        <button id="btn-prev" class="px-4 py-1.5 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-40 transition cursor-pointer">< ก่อนหน้า</button>
+                        <button id="btn-next" class="px-4 py-1.5 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-40 transition cursor-pointer">ถัดไป ></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <script type="module">
-        // ... (ใส่ logic การทำงานปกติของคุณที่นี่) ...
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        // *** ใส่ Firebase Config ของคุณที่นี่ ***
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqqZS_MmWqPw4G0EzTfWxsyp5AXiI5SEA",
+            authDomain: "salon-accounting-f44bd.firebaseapp.com",
+            projectId: "salon-accounting-f44bd",
+            storageBucket: "salon-accounting-f44bd.firebasestorage.app",
+            messagingSenderId: "1098548783182",
+            appId: "1:1098548783182:web:06c13ddb48c68ff7ee7b1f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // เปลี่ยนชื่อ Collection ให้เป็นของร้านซักรีด
+        const recordsCollection = collection(db, "s2_laundry_records");
+        const logCollection = collection(db, "s2_laundry_activity_logs");
+
+        // ... (โค้ด Logic การทำงานที่เหลือของคุณเหมือนเดิมทุกประการ) ...
     </script>
 </body>
 </html>
