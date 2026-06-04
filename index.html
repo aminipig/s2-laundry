@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบัญชี ร้านสระผม v0.01 (Time-Stamped Base Release)</title>
+    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.01 (Time-Stamped Base Release)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
 <body class="bg-gray-50 font-sans antialiased text-gray-800">
 
-    <!-- 1. หน้าจอสำหรับล็อกอิน (Login Screen) -->
     <div id="login-screen" class="flex flex-col items-center justify-center h-screen bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-gray-100 transform transition-all">
-            <div class="text-4xl mb-3">💇‍♀️</div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-1">ร้านสระผมคุณส้ม</h2>
+            <div class="text-4xl mb-3">🧺</div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">ร้าน S2 ซักอบรีด</h2>
             <p class="text-sm text-gray-500 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน</p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
@@ -27,13 +26,12 @@
         </div>
     </div>
 
-    <!-- 2. แถบข้อมูลล็อกอินด้านบน (Top Navbar) -->
     <header id="top-navbar" class="bg-gray-900 text-white shadow-md sticky top-0 z-50 hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-                <span class="text-2xl">💇‍♀️</span>
+                <span class="text-2xl">🧺</span>
                 <div>
-                    <h2 class="font-bold text-sm sm:text-base tracking-wide">Salon Accounting</h2>
+                    <h2 class="font-bold text-sm sm:text-base tracking-wide">S2 Laundry Accounting</h2>
                     <p class="text-[10px] text-emerald-400 font-mono -mt-0.5">version 0.01 Master</p>
                 </div>
             </div>
@@ -54,11 +52,9 @@
         </div>
     </header>
 
-    <!-- 3. พื้นที่แสดงเนื้อหาแอปพลิเคชันหลัก -->
     <main id="main-app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">ระบบบัญชีรายรับ-รายจ่าย ร้านสระผม 💇‍♀️</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">ระบบบัญชีรายรับ-รายจ่าย ร้าน S2 ซักอบรีด 🧺</h1>
 
-        <!-- Dashboard Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-green-50 p-6 rounded-2xl border border-green-200 shadow-xs">
                 <p class="text-sm font-medium text-green-600">รายรับรวม (ปี <span class="view-year"></span>)</p>
@@ -74,7 +70,6 @@
             </div>
         </div>
 
-        <!-- Chart Section -->
         <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                 <h3 class="text-lg font-semibold">กราฟสรุปรายเดือนประจำปี <span id="current-year"></span></h3>
@@ -90,7 +85,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Form Section -->
             <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 h-fit">
                 <h3 class="text-lg font-semibold mb-4" id="form-title">บันทึกรายการใหม่</h3>
                 <form id="finance-form" class="space-y-4">
@@ -104,7 +98,7 @@
                         <label class="block text-sm font-medium text-gray-700">ประเภท</label>
                         <select id="type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
                             <option value="income">รายรับ (ค่าบริการ/ขายของ)</option>
-                            <option value="expense">รายจ่าย (ซื้อของ/ค่าน้ำไฟ/ค่าแรง)</option>
+                            <option value="expense">รายจ่าย (ซื้อน้ำยา/ค่าน้ำไฟ/ค่าแรง)</option>
                         </select>
                     </div>
                     <div id="payment-method-container">
@@ -116,7 +110,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">รายละเอียดรายการ</label>
-                        <input type="text" id="description" placeholder="เช่น สระ-ไดร์ ลูกค้า VIP" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <input type="text" id="description" placeholder="เช่น ค่าซักอบแห้ง ชุดเครื่องนอน VIP" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">จำนวนเงิน (บาท)</label>
@@ -134,7 +128,6 @@
                 </form>
             </div>
 
-            <!-- Table Section -->
             <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 lg:col-span-2">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-gray-100 mb-6 gap-4 bg-gray-50 p-4 rounded-xl">
                     <div>
@@ -209,7 +202,6 @@
         </div>
     </main>
 
-    <!-- Firebase Script โมดูลการล็อกอิน Google Auth -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -696,7 +688,7 @@
             const logDetails = `เงื่อนไขช่วงวันที่: ${start} ถึง ${end} | จำนวนทั้งหมด: ${chronologicalRecords.length} รายการ | รายการส่งออก: ${exportedItemsSummary.join(", ")}`;
             await writeActivityLog("ส่งออก Excel", logDetails);
 
-            XLSX.writeFile(workbook, `สมุดเงินสดร้านสระผม_${start}_ถึง_${end}.xlsx`);
+            XLSX.writeFile(workbook, `สมุดเงินสดร้านS2ซักอบรีด_${start}_ถึง_${end}.xlsx`);
         });
 
         document.getElementById('date').value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
