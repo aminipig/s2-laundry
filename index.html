@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบัญชี ร้านสระผม v0.01 (Time-Stamped Base Release)</title>
+    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.01 (Time-Stamped Base Release)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -13,8 +13,8 @@
     <!-- 1. หน้าจอสำหรับล็อกอิน (Login Screen) -->
     <div id="login-screen" class="flex flex-col items-center justify-center h-screen bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-gray-100 transform transition-all">
-            <div class="text-4xl mb-3">💇‍♀️</div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-1">ร้านสระผมคุณส้ม</h2>
+            <div class="text-4xl mb-3">🧺</div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">ร้าน S2 ซักอบรีด</h2>
             <p class="text-sm text-gray-500 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน</p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
@@ -31,9 +31,9 @@
     <header id="top-navbar" class="bg-gray-900 text-white shadow-md sticky top-0 z-50 hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
-                <span class="text-2xl">💇‍♀️</span>
+                <span class="text-2xl">🧺</span>
                 <div>
-                    <h2 class="font-bold text-sm sm:text-base tracking-wide">Salon Accounting</h2>
+                    <h2 class="font-bold text-sm sm:text-base tracking-wide">S2 Laundry Accounting</h2>
                     <p class="text-[10px] text-emerald-400 font-mono -mt-0.5">version 0.01 Master</p>
                 </div>
             </div>
@@ -56,7 +56,7 @@
 
     <!-- 3. พื้นที่แสดงเนื้อหาแอปพลิเคชันหลัก -->
     <main id="main-app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">ระบบบัญชีรายรับ-รายจ่าย ร้านสระผม 💇‍♀️</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">ระบบบัญชีรายรับ-รายจ่าย ร้าน S2 ซักอบรีด 🧺</h1>
 
         <!-- Dashboard Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -103,8 +103,8 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">ประเภท</label>
                         <select id="type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
-                            <option value="income">รายรับ (ค่าบริการ/ขายของ)</option>
-                            <option value="expense">รายจ่าย (ซื้อของ/ค่าน้ำไฟ/ค่าแรง)</option>
+                            <option value="income">รายรับ (ค่าซักอบรีด/บริการ)</option>
+                            <option value="expense">รายจ่าย (ค่าน้ำยา/ค่าไฟ/ค่าแรง)</option>
                         </select>
                     </div>
                     <div id="payment-method-container">
@@ -116,7 +116,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">รายละเอียดรายการ</label>
-                        <input type="text" id="description" placeholder="เช่น สระ-ไดร์ ลูกค้า VIP" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <input type="text" id="description" placeholder="เช่น ค่าซักผ้าห่ม 2 ผืน" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">จำนวนเงิน (บาท)</label>
@@ -124,7 +124,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">หมายเหตุ (ถ้ามี)</label>
-                        <input type="text" id="notes" placeholder="เช่น โอนเงินเข้าบัญชีธนาคารกสิกร" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <input type="text" id="notes" placeholder="เช่น โอนเงินเข้าบัญชีธนาคาร" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
                     </div>
                     
                     <div class="flex flex-col gap-2">
@@ -229,7 +229,7 @@
         const auth = getAuth(app);
         const googleProvider = new GoogleAuthProvider();
 
-        const recordsCollection = collection(db, "salon_records");
+        const recordsCollection = collection(db, "s2_laundry_records"); // เปลี่ยน collection name
         const logCollection = collection(db, "activity_logs"); 
 
         window.transactions = []; 
@@ -289,7 +289,7 @@
         });
 
         document.getElementById('btn-logout').addEventListener('click', async () => {
-            if (confirm("คุณปิงต้องการออกจากระบบบัญชีใช่ไหมครับ?")) {
+            if (confirm("คุณปิงต้องการออกจากระบบบัญชีร้าน S2 ซักอบรีดใช่ไหมครับ?")) {
                 try {
                     await writeActivityLog("ออกจากระบบ", `กดปุ่มตัดการเชื่อมต่อและออกจากระบบบัญชีแล้ว`);
                     await signOut(auth);
@@ -422,7 +422,6 @@
             applySortAndRender();
         }
 
-        // 🌟 ปรับปรุง Logic การจัดเรียง: หากเป็นวันเดียวกัน ให้เรียงจากเวลาน้อย (บันทึกก่อน) ไปมาก (บันทึกทีหลัง)
         function applySortAndRender() {
             let processedRecords = [...window.transactions];
             
@@ -445,14 +444,12 @@
 
                 if (currentSortKey === 'date') {
                     if (dateOnlyA === dateOnlyB) {
-                        // วันเดียวกัน: บังคับล็อกเรียงเวลาน้อยไปมากเสมอ (Ascending Time) 🌟
                         return new Date(a.date) - new Date(b.date);
                     }
-                    // ต่างวันกัน: เรียงตามเงื่อนไขหัวตาราง (ปกติเป็นล่าสุดขึ้นก่อน)
                     return currentSortDirection === 'desc' ? new Date(dateOnlyB) - new Date(dateOnlyA) : new Date(dateOnlyA) - new Date(dateOnlyB);
                 } else if (currentSortKey === 'amount') {
                     if (dateOnlyA === dateOnlyB) {
-                        return new Date(a.date) - new Date(b.date); // วันเดียวกันคงความเสถียรตามเวลา
+                        return new Date(a.date) - new Date(b.date); 
                     }
                     return currentSortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
                 }
@@ -492,7 +489,6 @@
                     }
                 }
 
-                // 🌟 ปรับปรุง: ตัดสตริง ดึงเฉพาะส่วนวันเดือนปี (10 หลักแรก) มาโชว์หน้าตารางลิสต์พอครับ
                 const showDateOnly = t.date.substring(0, 10);
 
                 const tr = document.createElement('tr');
@@ -535,7 +531,6 @@
             const item = window.transactions.find(t => t.id === id);
             if (!item) return;
             document.getElementById('edit-id').value = item.id;
-            // ตอนแก้ไข ดึงแค่วันเดือนปีสั้นไปใส่อินพุตปฏิทินหน้าร้าน
             document.getElementById('date').value = item.date.substring(0, 10);
             document.getElementById('type').value = item.type;
             document.getElementById('description').value = item.description;
@@ -568,7 +563,7 @@
             if (!item) return;
             if (confirm(`คุณปิงแน่ใจนะครับ ว่าต้องการลบรายการ "${item.description}"?`)) {
                 try {
-                    await deleteDoc(doc(db, "salon_records", id));
+                    await deleteDoc(doc(db, "s2_laundry_records", id));
                     await writeActivityLog("ลบรายการ", `ลบรายการ: "${item.description}" ยอด ${item.amount.toFixed(2)} บ.`);
                     if (document.getElementById('edit-id').value === id) { window.resetFormMode(); }
                 } catch (e) { alert("ลบข้อมูลไม่สำเร็จ: " + e.message); }
@@ -609,7 +604,6 @@
             const editId = document.getElementById('edit-id').value;
             const itemType = document.getElementById('type').value;
             
-            // 🌟 ปรับปรุง: ดึงเวลาปัจจุบันหน้าร้าน (ชั่วโมง:นาที:วินาที) มาสับขั้วพ่วงต่อท้ายวันที่ปฏิทินก่อนยิงขึ้น Cloud
             const inputDateValue = document.getElementById('date').value; 
             const nowTime = new Date();
             const pad = (num) => String(num).padStart(2, '0');
@@ -617,7 +611,7 @@
             const fullDateTimeStampString = `${inputDateValue} ${timeString}`;
 
             const payload = {
-                date: fullDateTimeStampString, // บันทึก วันเดือนปี + เวลาจริงลงเครื่องหลังบ้าน 🌟
+                date: fullDateTimeStampString, 
                 type: itemType,
                 description: document.getElementById('description').value,
                 amount: parseFloat(document.getElementById('amount').value),
@@ -627,12 +621,11 @@
 
             try {
                 if (editId) {
-                    // เคสแก้ไข: แนะนำให้ใช้โครงวันเดิมเพื่อรักษาสถิติเวลาของรายการนั้น ๆ ไว้
                     const existingItem = window.transactions.find(t => t.id === editId);
                     if (existingItem && existingItem.date.substring(0,10) === inputDateValue) {
                         payload.date = existingItem.date; 
                     }
-                    await updateDoc(doc(db, "salon_records", editId), payload);
+                    await updateDoc(doc(db, "s2_laundry_records", editId), payload);
                     await writeActivityLog("แก้ไขรายการ", `แก้ไขเป็น: "${payload.description}" ยอด ${payload.amount.toFixed(2)} บ. (${payload.paymentMethod})`);
                 } else {
                     await addDoc(recordsCollection, payload);
@@ -648,7 +641,6 @@
             if (!start || !end) { alert('กรุณาเลือกช่วงวันที่ก่อนส่งออก Excel ครับ'); return; }
             if (sortedRecords.length === 0) { alert('ไม่พบข้อมูลในช่วงเวลาดังกล่าว'); return; }
 
-            // ตอนออก Excel กรองเรียงตามระบบ Logic ตัวเดียวกับหน้าร้าน
             let chronologicalRecords = [...sortedRecords];
 
             const headers = ['วัน เดือน ปี', 'รายการ', 'ช่องทางชำระเงิน', 'รายรับ (บาท)', 'รายจ่าย (บาท)', 'คงเหลือ (บาท)', 'หมายเหตุ'];
@@ -696,7 +688,7 @@
             const logDetails = `เงื่อนไขช่วงวันที่: ${start} ถึง ${end} | จำนวนทั้งหมด: ${chronologicalRecords.length} รายการ | รายการส่งออก: ${exportedItemsSummary.join(", ")}`;
             await writeActivityLog("ส่งออก Excel", logDetails);
 
-            XLSX.writeFile(workbook, `สมุดเงินสดร้านสระผม_${start}_ถึง_${end}.xlsx`);
+            XLSX.writeFile(workbook, `สมุดเงินสดร้านS2ซักอบรีด_${start}_ถึง_${end}.xlsx`);
         });
 
         document.getElementById('date').value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
