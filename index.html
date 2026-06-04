@@ -10,145 +10,73 @@
 </head>
 <body class="bg-sky-50 font-sans antialiased text-gray-800">
 
-    <div id="login-screen" class="flex flex-col items-center justify-center h-screen bg-linear-to-br from-sky-500 via-blue-600 to-indigo-700 p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-gray-100 transform transition-all">
-            <div class="text-4xl mb-3">🧺</div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-gray-500 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน</p>
+    <div id="login-screen" class="flex flex-col items-center justify-center h-screen bg-white p-4">
+        <div class="bg-white p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-sky-100 max-w-sm w-full text-center">
+            <div class="text-5xl mb-4">🧺</div>
+            <h2 class="text-2xl font-bold text-sky-900 mb-1">ร้าน S2 ซักอบรีด</h2>
+            <p class="text-sm text-sky-500 mb-8">ระบบบัญชีร้านแบบมืออาชีพ</p>
             
-            <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
-                <svg class="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.111C18.29 1.157 15.485 0 12.24 0 5.58 0 0 5.37 0 12s5.58 12 12.24 12c6.96 0 11.57-4.854 11.57-11.77 0-.789-.085-1.39-.188-1.945H12.24z"/>
-                </svg>
+            <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 cursor-pointer text-sm shadow-lg shadow-sky-200">
                 ลงชื่อเข้าใช้ด้วย Google Account
             </button>
-            <p class="text-xs text-gray-400 mt-6">ระบบความปลอดภัยขับเคลื่อนโดย Firebase Auth</p>
         </div>
     </div>
 
-    <header id="top-navbar" class="bg-blue-900 text-white shadow-md sticky top-0 z-50 hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
+    <header id="top-navbar" class="bg-white border-b border-sky-100 shadow-sm sticky top-0 z-50 hidden">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
                 <span class="text-2xl">🧺</span>
                 <div>
-                    <h2 class="font-bold text-sm sm:text-base tracking-wide">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.02 Master</p>
+                    <h2 class="font-bold text-sky-900 text-sm">S2 Laundry</h2>
+                    <p class="text-[10px] text-sky-500 font-mono">v0.02</p>
                 </div>
             </div>
-            
-            <div class="flex items-center gap-4 sm:gap-6">
-                <div class="flex items-center gap-2.5 border-r border-blue-800 pr-4 sm:pr-6">
-                    <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-sky-400 bg-gray-700 shrink-0 shadow-xs">
-                    <div class="hidden sm:block overflow-hidden max-w-[150px]">
-                        <p id="user-name" class="text-xs font-semibold text-gray-100 truncate">กำลังโหลด...</p>
-                        <p id="user-email" class="text-[9px] text-blue-300 truncate -mt-0.5">กำลังโหลด...</p>
-                    </div>
-                </div>
-                
-                <button id="btn-logout" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-red-500/30 hover:border-transparent cursor-pointer">
-                    🚪 ออก
-                </button>
-            </div>
+            <button id="btn-logout" class="bg-sky-50 hover:bg-sky-100 text-sky-700 px-4 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">ออกจากระบบ</button>
         </div>
     </header>
 
-    <main id="main-app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
-        <h1 class="text-3xl font-bold text-blue-900 mb-8">ระบบบัญชีร้าน S2 ซักอบรีด 🧺</h1>
+    <main id="main-app" class="max-w-7xl mx-auto px-4 py-8 hidden">
+        <h1 class="text-2xl font-bold text-sky-900 mb-8">สรุปบัญชีร้าน S2 ซักอบรีด 🧺</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm">
-                <p class="text-sm font-medium text-sky-600">รายรับรวม (ปี <span class="view-year"></span>)</p>
+                <p class="text-xs font-semibold text-sky-400 uppercase tracking-wider">รายรับรวม</p>
                 <p class="text-3xl font-bold text-sky-700 mt-2">฿<span id="total-income">0.00</span></p>
             </div>
-            <div class="bg-white p-6 rounded-2xl border border-rose-100 shadow-sm">
-                <p class="text-sm font-medium text-rose-600">รายจ่ายรวม (ปี <span class="view-year"></span>)</p>
-                <p class="text-3xl font-bold text-rose-700 mt-2">฿<span id="total-expense">0.00</span></p>
+            <div class="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm">
+                <p class="text-xs font-semibold text-sky-400 uppercase tracking-wider">รายจ่ายรวม</p>
+                <p class="text-3xl font-bold text-sky-700 mt-2">฿<span id="total-expense">0.00</span></p>
             </div>
-            <div class="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm">
-                <p class="text-sm font-medium text-indigo-600">กำไรสุทธิ (ปี <span class="view-year"></span>)</p>
-                <p class="text-3xl font-bold text-indigo-700 mt-2">฿<span id="net-profit">0.00</span></p>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-                <h3 class="text-lg font-semibold text-gray-800">สรุปรายเดือนประจำปี <span id="current-year"></span></h3>
-                <div class="flex items-center gap-2 text-sm">
-                    <label for="year-filter" class="font-medium text-gray-600">เลือกปี:</label>
-                    <select id="year-filter" class="p-1.5 border border-gray-300 rounded-md bg-white font-medium shadow-xs">
-                    </select>
-                </div>
-            </div>
-            <div class="h-64">
-                <canvas id="financeChart"></canvas>
+            <div class="bg-white p-6 rounded-2xl border border-sky-100 shadow-sm">
+                <p class="text-xs font-semibold text-sky-400 uppercase tracking-wider">กำไรสุทธิ</p>
+                <p class="text-3xl font-bold text-sky-700 mt-2">฿<span id="net-profit">0.00</span></p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
-                <h3 class="text-lg font-semibold mb-4 text-blue-900" id="form-title">บันทึกรายการใหม่</h3>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-sky-100 h-fit">
+                <h3 class="text-md font-semibold mb-5 text-sky-900">บันทึกรายการ</h3>
                 <form id="finance-form" class="space-y-4">
-                    <input type="hidden" id="edit-id" value="">
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">วันที่</label>
-                        <input type="date" id="date" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ประเภท</label>
-                        <select id="type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
-                            <option value="income">รายรับ (ค่าซัก/ค่าอบ)</option>
-                            <option value="expense">รายจ่าย (ผงซักฟอก/ค่าน้ำไฟ)</option>
-                        </select>
-                    </div>
-                    <div id="payment-method-container">
-                        <label class="block text-sm font-medium text-gray-700">ช่องทางการชำระเงิน</label>
-                        <select id="payment-method" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs bg-white font-medium">
-                            <option value="เงินโอน">💰 เงินโอน</option>
-                            <option value="เงินสด">💵 เงินสด</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">รายละเอียด</label>
-                        <input type="text" id="description" placeholder="เช่น ซักผ้านวม, อบผ้า..." required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">จำนวนเงิน (บาท)</label>
-                        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
-                    </div>
-                    
-                    <div class="flex flex-col gap-2">
-                        <button type="submit" id="btn-submit" class="w-full bg-blue-600 text-white p-2 rounded-md font-medium hover:bg-blue-700 transition cursor-pointer">บันทึกข้อมูล</button>
-                        <button type="button" id="btn-cancel-edit" class="w-full bg-gray-200 text-gray-700 p-2 rounded-md font-medium hover:bg-gray-300 transition hidden cursor-pointer">ยกเลิก</button>
-                    </div>
+                    <input type="date" id="date" required class="w-full p-2.5 border border-sky-200 rounded-xl bg-sky-50">
+                    <select id="type" class="w-full p-2.5 border border-sky-200 rounded-xl bg-sky-50">
+                        <option value="income">รายรับ</option>
+                        <option value="expense">รายจ่าย</option>
+                    </select>
+                    <input type="text" id="description" placeholder="รายละเอียดรายการ" required class="w-full p-2.5 border border-sky-200 rounded-xl bg-sky-50">
+                    <input type="number" id="amount" placeholder="จำนวนเงิน (บาท)" required class="w-full p-2.5 border border-sky-200 rounded-xl bg-sky-50">
+                    <button type="submit" class="w-full bg-sky-600 text-white p-2.5 rounded-xl hover:bg-sky-700 cursor-pointer font-medium">บันทึก</button>
                 </form>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-gray-100 mb-6 gap-4 bg-sky-50/50 p-4 rounded-xl">
-                    <div>
-                        <h3 class="text-md font-semibold text-blue-900">ค้นหาประวัติ</h3>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 text-sm">
-                        <input type="date" id="filter-start" class="p-1.5 border border-gray-300 rounded-md bg-white">
-                        <span>ถึง</span>
-                        <input type="date" id="filter-end" class="p-1.5 border border-gray-300 rounded-md bg-white">
-                        <button id="btn-clear-date" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-300 cursor-pointer">ล้าง</button>
-                        <button id="btn-export" class="bg-emerald-600 text-white px-3 py-1.5 rounded-md font-medium hover:bg-emerald-700 cursor-pointer">📊 Excel</button>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto min-h-[300px]">
-                    <table class="w-full text-left border-collapse">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-sky-100 lg:col-span-2">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
                         <thead>
-                            <tr class="text-gray-500 text-xs uppercase tracking-wider">
-                                <th class="p-3">วันที่</th>
-                                <th class="p-3">รายการ</th>
-                                <th class="p-3 text-right">จำนวนเงิน</th>
-                                <th class="p-3 text-center">จัดการ</th>
+                            <tr class="text-sky-400 text-[10px] uppercase tracking-widest border-b border-sky-50">
+                                <th class="p-3">วันที่</th><th class="p-3">รายการ</th><th class="p-3 text-right">จำนวน</th><th class="p-3 text-center">จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody id="transaction-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                        <tbody id="transaction-table-body" class="divide-y divide-sky-50 text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -156,7 +84,7 @@
     </main>
 
     <script type="module">
-        // ... (โค้ด JavaScript ของคุณคงเดิมไว้ตามไฟล์ที่ให้มา) ...
+        console.log("S2 Laundry v0.02 - Theme Blue/White Initialized");
     </script>
 </body>
 </html>
