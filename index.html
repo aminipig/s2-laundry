@@ -8,74 +8,79 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
-<body class="bg-gray-50 font-sans antialiased text-gray-800">
+<body class="bg-slate-50 font-sans antialiased text-gray-800">
 
-    <div id="login-screen" class="flex flex-col items-center justify-center h-screen bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-gray-100 transform transition-all">
-            <div class="text-4xl mb-3">🧺</div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-gray-500 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน</p>
+    <!-- 1. หน้าจอสำหรับล็อกอิน (Login Screen) -->
+    <div id="login-screen" class="flex flex-col items-center justify-center h-screen bg-linear-to-br from-sky-400 via-blue-500 to-emerald-400 p-4">
+        <div class="bg-white/95 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-white/20 backdrop-blur-xs transform transition-all">
+            <div class="text-5xl mb-4 animate-bounce">🧺</div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-1">ร้าน S2 ซักอบรีด</h2>
+            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน</p>
             
-            <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
+            <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-sky-400 text-slate-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.111C18.29 1.157 15.485 0 12.24 0 5.58 0 0 5.37 0 12s5.58 12 12.24 12c6.96 0 11.57-4.854 11.57-11.77 0-.789-.085-1.39-.188-1.945H12.24z"/>
                 </svg>
                 ลงชื่อเข้าใช้ด้วย Google Account
             </button>
-            <p class="text-xs text-gray-400 mt-6">ระบบความปลอดภัยขับเคลื่อนโดย Firebase Auth</p>
+            <p class="text-xs text-slate-400 mt-6">ระบบความปลอดภัยขับเคลื่อนโดย Firebase Auth</p>
         </div>
     </div>
 
-    <header id="top-navbar" class="bg-gray-900 text-white shadow-md sticky top-0 z-50 hidden">
+    <!-- 2. แถบข้อมูลล็อกอินด้านบน (Top Navbar) -->
+    <header id="top-navbar" class="bg-emerald-950 text-white shadow-md sticky top-0 z-50 hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
                 <span class="text-2xl">🧺</span>
                 <div>
-                    <h2 class="font-bold text-sm sm:text-base tracking-wide">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-emerald-400 font-mono -mt-0.5">version 0.01 Master</p>
+                    <h2 class="font-bold text-sm sm:text-base tracking-wide text-white">S2 Laundry Accounting</h2>
+                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.01 Master</p>
                 </div>
             </div>
             
             <div class="flex items-center gap-4 sm:gap-6">
-                <div class="flex items-center gap-2.5 border-r border-gray-800 pr-4 sm:pr-6">
-                    <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-indigo-400 bg-gray-700 shrink-0 shadow-xs">
+                <div class="flex items-center gap-2.5 border-r border-emerald-800 pr-4 sm:pr-6">
+                    <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-sky-400 bg-emerald-900 shrink-0 shadow-xs">
                     <div class="hidden sm:block overflow-hidden max-w-[150px]">
-                        <p id="user-name" class="text-xs font-semibold text-gray-100 truncate">กำลังโหลด...</p>
-                        <p id="user-email" class="text-[9px] text-gray-400 truncate -mt-0.5">กำลังโหลด...</p>
+                        <p id="user-name" class="text-xs font-semibold text-emerald-50 truncate">กำลังโหลด...</p>
+                        <p id="user-email" class="text-[9px] text-sky-200 truncate -mt-0.5">กำลังโหลด...</p>
                     </div>
                 </div>
                 
-                <button id="btn-logout" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-red-500/30 hover:border-transparent cursor-pointer">
+                <button id="btn-logout" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-red-500/30 hover:border-transparent cursor-pointer">
                     🚪 ออกระบบ
                 </button>
             </div>
         </div>
     </header>
 
+    <!-- 3. พื้นที่แสดงเนื้อหาแอปพลิเคชันหลัก -->
     <main id="main-app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">ระบบบัญชีรายรับ-รายจ่าย ร้าน S2 ซักอบรีด 🧺</h1>
+        <h1 class="text-3xl font-bold text-slate-900 mb-8">ระบบบัญชีรายรับ-รายจ่าย ร้าน S2 ซักอบรีด 🧺</h1>
 
+        <!-- Dashboard Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-green-50 p-6 rounded-2xl border border-green-200 shadow-xs">
-                <p class="text-sm font-medium text-green-600">รายรับรวม (ปี <span class="view-year"></span>)</p>
-                <p class="text-3xl font-bold text-green-700 mt-2">฿<span id="total-income">0.00</span></p>
+            <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-200 shadow-xs">
+                <p class="text-sm font-medium text-emerald-700">รายรับรวม (ปี <span class="view-year"></span>)</p>
+                <p class="text-3xl font-bold text-emerald-800 mt-2">฿<span id="total-income">0.00</span></p>
             </div>
-            <div class="bg-red-50 p-6 rounded-2xl border border-red-200 shadow-xs">
-                <p class="text-sm font-medium text-red-600">รายจ่ายรวม (ปี <span class="view-year"></span>)</p>
-                <p class="text-3xl font-bold text-red-700 mt-2">฿<span id="total-expense">0.00</span></p>
+            <div class="bg-rose-50 p-6 rounded-2xl border border-rose-200 shadow-xs">
+                <p class="text-sm font-medium text-rose-700">รายจ่ายรวม (ปี <span class="view-year"></span>)</p>
+                <p class="text-3xl font-bold text-rose-800 mt-2">฿<span id="total-expense">0.00</span></p>
             </div>
-            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200 shadow-xs">
-                <p class="text-sm font-medium text-blue-600">กำไรสุทธิ (ปี <span class="view-year"></span>)</p>
-                <p class="text-3xl font-bold text-blue-700 mt-2">฿<span id="net-profit">0.00</span></p>
+            <div class="bg-sky-50 p-6 rounded-2xl border border-sky-200 shadow-xs">
+                <p class="text-sm font-medium text-sky-700">กำไรสุทธิ (ปี <span class="view-year"></span>)</p>
+                <p class="text-3xl font-bold text-sky-800 mt-2">฿<span id="net-profit">0.00</span></p>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 mb-8">
+        <!-- Chart Section -->
+        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 mb-8">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-                <h3 class="text-lg font-semibold">กราฟสรุปรายเดือนประจำปี <span id="current-year"></span></h3>
+                <h3 class="text-lg font-semibold text-slate-800">กราฟสรุปรายเดือนประจำปี <span id="current-year"></span></h3>
                 <div class="flex items-center gap-2 text-sm">
-                    <label for="year-filter" class="font-medium text-gray-600">เลือกปีที่ต้องการดู:</label>
-                    <select id="year-filter" class="p-1.5 border border-gray-300 rounded-md bg-white font-medium shadow-xs">
+                    <label for="year-filter" class="font-medium text-slate-600">เลือกปีที่ต้องการดู:</label>
+                    <select id="year-filter" class="p-1.5 border border-slate-300 rounded-md bg-white font-medium shadow-xs">
                     </select>
                 </div>
             </div>
@@ -85,60 +90,62 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 h-fit">
-                <h3 class="text-lg font-semibold mb-4" id="form-title">บันทึกรายการใหม่</h3>
+            <!-- Form Section -->
+            <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 h-fit">
+                <h3 class="text-lg font-semibold mb-4 text-slate-800" id="form-title">บันทึกรายการใหม่</h3>
                 <form id="finance-form" class="space-y-4">
                     <input type="hidden" id="edit-id" value="">
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">วันที่</label>
-                        <input type="date" id="date" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <label class="block text-sm font-medium text-slate-700">วันที่</label>
+                        <input type="date" id="date" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs focus:border-sky-500 focus:outline-hidden">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">ประเภท</label>
-                        <select id="type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <label class="block text-sm font-medium text-slate-700">ประเภท</label>
+                        <select id="type" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs focus:border-sky-500 focus:outline-hidden">
                             <option value="income">รายรับ (ค่าบริการ/ขายของ)</option>
                             <option value="expense">รายจ่าย (ซื้อน้ำยา/ค่าน้ำไฟ/ค่าแรง)</option>
                         </select>
                     </div>
                     <div id="payment-method-container">
-                        <label class="block text-sm font-medium text-gray-700">ช่องทางการชำระเงิน</label>
-                        <select id="payment-method" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs bg-white font-medium">
+                        <label class="block text-sm font-medium text-slate-700">ช่องทางการชำระเงิน</label>
+                        <select id="payment-method" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs bg-white font-medium focus:border-sky-500 focus:outline-hidden">
                             <option value="เงินโอน">💰 เงินโอน</option>
                             <option value="เงินสด">💵 เงินสด</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">รายละเอียดรายการ</label>
-                        <input type="text" id="description" placeholder="เช่น ค่าซักอบแห้ง ชุดเครื่องนอน VIP" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <label class="block text-sm font-medium text-slate-700">รายละเอียดรายการ</label>
+                        <input type="text" id="description" placeholder="เช่น ค่าซักอบแห้ง ชุดเครื่องนอน VIP" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs focus:border-sky-500 focus:outline-hidden">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">จำนวนเงิน (บาท)</label>
-                        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <label class="block text-sm font-medium text-slate-700">จำนวนเงิน (บาท)</label>
+                        <input type="number" id="amount" placeholder="0.00" min="0" step="0.01" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs focus:border-sky-500 focus:outline-hidden">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">หมายเหตุ (ถ้ามี)</label>
-                        <input type="text" id="notes" placeholder="เช่น โอนเงินเข้าบัญชีธนาคารกสิกร" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-xs">
+                        <label class="block text-sm font-medium text-slate-700">หมายเหตุ (ถ้ามี)</label>
+                        <input type="text" id="notes" placeholder="เช่น โอนเงินเข้าบัญชีธนาคารกสิกร" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs focus:border-sky-500 focus:outline-hidden">
                     </div>
                     
                     <div class="flex flex-col gap-2">
-                        <button type="submit" id="btn-submit" class="w-full bg-indigo-600 text-white p-2 rounded-md font-medium hover:bg-indigo-700 transition cursor-pointer">บันทึกข้อมูล</button>
-                        <button type="button" id="btn-cancel-edit" class="w-full bg-gray-200 text-gray-700 p-2 rounded-md font-medium hover:bg-gray-300 transition hidden cursor-pointer">ยกเลิกการแก้ไข</button>
+                        <button type="submit" id="btn-submit" class="w-full bg-sky-600 text-white p-2 rounded-md font-medium hover:bg-sky-700 transition cursor-pointer shadow-xs">บันทึกข้อมูล</button>
+                        <button type="button" id="btn-cancel-edit" class="w-full bg-slate-200 text-slate-700 p-2 rounded-md font-medium hover:bg-slate-300 transition hidden cursor-pointer">ยกเลิกการแก้ไข</button>
                     </div>
                 </form>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-xs border border-gray-100 lg:col-span-2">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-gray-100 mb-6 gap-4 bg-gray-50 p-4 rounded-xl">
+            <!-- Table Section -->
+            <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 lg:col-span-2">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-slate-100 mb-6 gap-4 bg-slate-50 p-4 rounded-xl">
                     <div>
-                        <h3 class="text-md font-semibold text-gray-700">เรียกดูข้อมูลตามช่วงเวลา</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">*ระบบจะกรองตั้งแต่วันต้นปีให้อัตโนมัติ</p>
+                        <h3 class="text-md font-semibold text-slate-700">เรียกดูข้อมูลตามช่วงเวลา</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">*ระบบจะกรองตั้งแต่วันต้นปีให้อัตโนมัติ</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 text-sm">
-                        <input type="date" id="filter-start" class="p-1.5 border border-gray-300 rounded-md bg-white w-[135px] sm:w-auto">
-                        <span class="text-gray-500">ถึง</span>
-                        <input type="date" id="filter-end" class="p-1.5 border border-gray-300 rounded-md bg-white w-[135px] sm:w-auto">
-                        <button id="btn-clear-date" class="bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-md text-xs font-medium hover:bg-gray-300 transition cursor-pointer shrink-0">ล้างค่า</button>
+                        <input type="date" id="filter-start" class="p-1.5 border border-slate-300 rounded-md bg-white w-[135px] sm:w-auto">
+                        <span class="text-slate-500">ถึง</span>
+                        <input type="date" id="filter-end" class="p-1.5 border border-slate-300 rounded-md bg-white w-[135px] sm:w-auto">
+                        <button id="btn-clear-date" class="bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-md text-xs font-medium hover:bg-slate-300 transition cursor-pointer shrink-0">ล้างค่า</button>
                         <button id="btn-export" class="bg-emerald-600 text-white px-3 py-1.5 rounded-md font-medium hover:bg-emerald-700 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-xs">
                             📊 Excel
                         </button>
@@ -146,24 +153,24 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-                    <h3 class="text-lg font-semibold">ประวัติรายการในตาราง</h3>
+                    <h3 class="text-lg font-semibold text-slate-800">ประวัติรายการในตาราง</h3>
                     <div class="flex flex-wrap items-center gap-4 text-sm w-full sm:w-auto justify-between sm:justify-end">
                         <div class="flex items-center gap-1.5 w-full sm:w-auto">
-                            <label for="search-input" class="text-gray-600 shrink-0 font-medium">ค้นหา:</label>
-                            <input type="text" id="search-input" placeholder="พิมพ์คำค้นหา..." class="p-1 border border-gray-300 rounded-md bg-white w-full sm:w-44 focus:outline-hidden">
+                            <label for="search-input" class="text-slate-600 shrink-0 font-medium">ค้นหา:</label>
+                            <input type="text" id="search-input" placeholder="พิมพ์คำค้นหา..." class="p-1 border border-slate-300 rounded-md bg-white w-full sm:w-44 focus:outline-hidden focus:border-sky-500">
                         </div>
                         <div class="flex items-center gap-4">
                             <div class="flex items-center gap-1.5">
-                                <label for="type-filter" class="text-gray-600">ประเภท:</label>
-                                <select id="type-filter" class="p-1 border border-gray-300 rounded-md bg-white font-medium">
+                                <label for="type-filter" class="text-slate-600">ประเภท:</label>
+                                <select id="type-filter" class="p-1 border border-slate-300 rounded-md bg-white font-medium">
                                     <option value="all">ทั้งหมด</option>
                                     <option value="income">รายรับ</option>
                                     <option value="expense">รายจ่าย</option>
                                 </select>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <label for="per-page" class="text-gray-600">แสดง:</label>
-                                <select id="per-page" class="p-1 border border-gray-300 rounded-md bg-white">
+                                <label for="per-page" class="text-slate-600">แสดง:</label>
+                                <select id="per-page" class="p-1 border border-slate-300 rounded-md bg-white">
                                     <option value="10">10</option>
                                     <option value="50">50</option>
                                     <option value="100">100</option>
@@ -177,31 +184,32 @@
                 <div class="overflow-x-auto min-h-[300px]">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
+                            <tr class="bg-slate-50 text-slate-600 text-sm uppercase">
                                 <th class="p-3 w-12">ลำดับ</th>
-                                <th class="p-3 cursor-pointer hover:bg-gray-100" id="th-date">วันที่ <span id="sort-icon-date">🔽</span></th>
+                                <th class="p-3 cursor-pointer hover:bg-slate-100" id="th-date">วันที่ <span id="sort-icon-date">🔽</span></th>
                                 <th class="p-3">รายการ</th>
                                 <th class="p-3">ประเภท</th>
                                 <th class="p-3 text-center">ช่องทางชำระเงิน</th>
-                                <th class="p-3 text-right cursor-pointer hover:bg-gray-100" id="th-amount">จำนวนเงิน <span id="sort-icon-amount" class="text-gray-400"></span></th>
+                                <th class="p-3 text-right cursor-pointer hover:bg-slate-100" id="th-amount">จำนวนเงิน <span id="sort-icon-amount" class="text-slate-400"></span></th>
                                 <th class="p-3 text-center w-24">จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody id="transaction-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                        <tbody id="transaction-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
                     </table>
                 </div>
 
-                <div class="flex items-center justify-between mt-4 text-sm border-t border-gray-100 pt-4">
-                    <span id="page-info" class="text-gray-600 font-medium">กำลังโหลด...</span>
+                <div class="flex items-center justify-between mt-4 text-sm border-t border-slate-100 pt-4">
+                    <span id="page-info" class="text-slate-600 font-medium">กำลังโหลด...</span>
                     <div class="flex gap-2">
-                        <button id="btn-prev" class="px-4 py-1.5 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-40 transition cursor-pointer">< ก่อนหน้า</button>
-                        <button id="btn-next" class="px-4 py-1.5 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-40 transition cursor-pointer">ถัดไป ></button>
+                        <button id="btn-prev" class="px-4 py-1.5 border border-slate-300 rounded-md hover:bg-slate-100 disabled:opacity-40 transition cursor-pointer">< ก่อนหน้า</button>
+                        <button id="btn-next" class="px-4 py-1.5 border border-slate-300 rounded-md hover:bg-slate-100 disabled:opacity-40 transition cursor-pointer">ถัดไป ></button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Firebase Script โมดูลการล็อกอิน Google Auth -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -414,7 +422,6 @@
             applySortAndRender();
         }
 
-        // 🌟 ปรับปรุง Logic การจัดเรียง: หากเป็นวันเดียวกัน ให้เรียงจากเวลาน้อย (บันทึกก่อน) ไปมาก (บันทึกทีหลัง)
         function applySortAndRender() {
             let processedRecords = [...window.transactions];
             
@@ -437,14 +444,12 @@
 
                 if (currentSortKey === 'date') {
                     if (dateOnlyA === dateOnlyB) {
-                        // วันเดียวกัน: บังคับล็อกเรียงเวลาน้อยไปมากเสมอ (Ascending Time) 🌟
                         return new Date(a.date) - new Date(b.date);
                     }
-                    // ต่างวันกัน: เรียงตามเงื่อนไขหัวตาราง (ปกติเป็นล่าสุดขึ้นก่อน)
                     return currentSortDirection === 'desc' ? new Date(dateOnlyB) - new Date(dateOnlyA) : new Date(dateOnlyA) - new Date(dateOnlyB);
                 } else if (currentSortKey === 'amount') {
                     if (dateOnlyA === dateOnlyB) {
-                        return new Date(a.date) - new Date(b.date); // วันเดียวกันคงความเสถียรตามเวลา
+                        return new Date(a.date) - new Date(b.date);
                     }
                     return currentSortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
                 }
@@ -484,20 +489,19 @@
                     }
                 }
 
-                // 🌟 ปรับปรุง: ตัดสตริง ดึงเฉพาะส่วนวันเดือนปี (10 หลักแรก) มาโชว์หน้าตารางลิสต์พอครับ
                 const showDateOnly = t.date.substring(0, 10);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-3 text-gray-400 font-medium">${rowNumber}</td>
                     <td class="p-3">${showDateOnly}</td>
-                    <td class="p-3 font-medium">${t.description}</td>
-                    <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${t.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
+                    <td class="p-3 font-medium text-slate-700">${t.description}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
                     <td class="p-3 text-center">${paymentMethodBadge}</td>
-                    <td class="p-3 text-right font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">฿${formatCurrency(t.amount)}</td>
+                    <td class="p-3 text-right font-semibold ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">฿${formatCurrency(t.amount)}</td>
                     <td class="p-3 text-center flex justify-center gap-2">
-                        <button onclick="editTransaction('${t.id}')" class="text-indigo-600 hover:text-indigo-900 font-medium cursor-pointer">✏️</button>
-                        <button onclick="deleteTransaction('${t.id}')" class="text-red-600 hover:text-red-900 font-medium cursor-pointer">🗑️</button>
+                        <button onclick="editTransaction('${t.id}')" class="text-sky-600 hover:text-sky-900 font-medium cursor-pointer">✏️</button>
+                        <button onclick="deleteTransaction('${t.id}')" class="text-rose-600 hover:text-rose-900 font-medium cursor-pointer">🗑️</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -527,7 +531,6 @@
             const item = window.transactions.find(t => t.id === id);
             if (!item) return;
             document.getElementById('edit-id').value = item.id;
-            // ตอนแก้ไข ดึงแค่วันเดือนปีสั้นไปใส่อินพุตปฏิทินหน้าร้าน
             document.getElementById('date').value = item.date.substring(0, 10);
             document.getElementById('type').value = item.type;
             document.getElementById('description').value = item.description;
@@ -537,7 +540,7 @@
 
             document.getElementById('form-title').innerText = "📝 แก้ไขรายการข้อมูล";
             document.getElementById('btn-submit').innerText = "อัปเดตข้อมูล";
-            document.getElementById('btn-submit').className = "w-full bg-orange-500 text-white p-2 rounded-md font-medium hover:bg-orange-600 transition cursor-pointer";
+            document.getElementById('btn-submit').className = "w-full bg-amber-500 text-white p-2 rounded-md font-medium hover:bg-amber-600 transition cursor-pointer shadow-xs";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
         }
 
@@ -545,7 +548,7 @@
             document.getElementById('edit-id').value = "";
             document.getElementById('form-title').innerText = "บันทึกรายการใหม่";
             document.getElementById('btn-submit').innerText = "บันทึกข้อมูล";
-            document.getElementById('btn-submit').className = "w-full bg-indigo-600 text-white p-2 rounded-md font-medium hover:bg-indigo-700 transition cursor-pointer";
+            document.getElementById('btn-submit').className = "w-full bg-sky-600 text-white p-2 rounded-md font-medium hover:bg-sky-700 transition cursor-pointer shadow-xs";
             document.getElementById('btn-cancel-edit').classList.add('hidden');
             document.getElementById('description').value = '';
             document.getElementById('amount').value = '';
@@ -576,7 +579,7 @@
                     labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
                     datasets: [
                         { label: 'รายรับ', data: incomeData, backgroundColor: '#10B981', borderRadius: 6 },
-                        { label: 'รายจ่าย', data: expenseData, backgroundColor: '#EF4444', borderRadius: 6 }
+                        { label: 'รายจ่าย', data: expenseData, backgroundColor: '#F43F5E', borderRadius: 6 }
                     ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
@@ -601,7 +604,6 @@
             const editId = document.getElementById('edit-id').value;
             const itemType = document.getElementById('type').value;
             
-            // 🌟 ปรับปรุง: ดึงเวลาปัจจุบันหน้าร้าน (ชั่วโมง:นาที:วินาที) มาสับขั้วพ่วงต่อท้ายวันที่ปฏิทินก่อนยิงขึ้น Cloud
             const inputDateValue = document.getElementById('date').value; 
             const nowTime = new Date();
             const pad = (num) => String(num).padStart(2, '0');
@@ -609,7 +611,7 @@
             const fullDateTimeStampString = `${inputDateValue} ${timeString}`;
 
             const payload = {
-                date: fullDateTimeStampString, // บันทึก วันเดือนปี + เวลาจริงลงเครื่องหลังบ้าน 🌟
+                date: fullDateTimeStampString, 
                 type: itemType,
                 description: document.getElementById('description').value,
                 amount: parseFloat(document.getElementById('amount').value),
@@ -619,7 +621,6 @@
 
             try {
                 if (editId) {
-                    // เคสแก้ไข: แนะนำให้ใช้โครงวันเดิมเพื่อรักษาสถิติเวลาของรายการนั้น ๆ ไว้
                     const existingItem = window.transactions.find(t => t.id === editId);
                     if (existingItem && existingItem.date.substring(0,10) === inputDateValue) {
                         payload.date = existingItem.date; 
@@ -640,7 +641,6 @@
             if (!start || !end) { alert('กรุณาเลือกช่วงวันที่ก่อนส่งออก Excel ครับ'); return; }
             if (sortedRecords.length === 0) { alert('ไม่พบข้อมูลในช่วงเวลาดังกล่าว'); return; }
 
-            // ตอนออก Excel กรองเรียงตามระบบ Logic ตัวเดียวกับหน้าร้าน
             let chronologicalRecords = [...sortedRecords];
 
             const headers = ['วัน เดือน ปี', 'รายการ', 'ช่องทางชำระเงิน', 'รายรับ (บาท)', 'รายจ่าย (บาท)', 'คงเหลือ (บาท)', 'หมายเหตุ'];
