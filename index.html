@@ -33,8 +33,7 @@
                 <span class="text-2xl">🧺</span>
                 <div>
                     <h2 class="font-bold text-sm sm:text-base tracking-wide text-white">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.01 Supabase Master</p>
-                </div>
+                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.01</p> </div>
             </div>
             
             <div class="flex items-center gap-4 sm:gap-6">
@@ -105,8 +104,8 @@
                     <div id="payment-method-container">
                         <label class="block text-sm font-medium text-slate-700">ช่องทางการชำระเงิน</label>
                         <select id="payment-method" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs bg-white font-medium focus:border-sky-500 focus:outline-hidden">
-                            <option value="เงินโอน">💰 เงินโอน</option>
                             <option value="เงินสด">💵 เงินสด</option>
+                            <option value="เงินโอน">💰 เงินโอน</option>
                         </select>
                     </div>
                     <div>
@@ -149,10 +148,15 @@
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
                     <h3 class="text-lg font-semibold text-slate-800">ประวัติรายการในตาราง</h3>
                     <div class="flex flex-wrap items-center gap-4 text-sm w-full sm:w-auto justify-between sm:justify-end">
+                        
                         <div class="flex items-center gap-1.5 w-full sm:w-auto">
                             <label for="search-input" class="text-slate-600 shrink-0 font-medium">ค้นหา:</label>
-                            <input type="text" id="search-input" placeholder="พิมพ์คำค้นหา..." class="p-1 border border-slate-300 rounded-md bg-white w-full sm:w-44 focus:outline-hidden focus:border-sky-500">
+                            <div class="relative w-full sm:w-44 flex items-center">
+                                <input type="text" id="search-input" placeholder="พิมพ์คำค้นหา..." class="p-1 pr-6 border border-slate-300 rounded-md bg-white w-full focus:outline-hidden focus:border-sky-500">
+                                <button id="btn-clear-search" class="absolute right-1.5 text-gray-400 hover:text-gray-600 text-xs hidden cursor-pointer font-bold">✕</button>
+                            </div>
                         </div>
+
                         <div class="flex items-center gap-4">
                             <div class="flex items-center gap-1.5">
                                 <label for="type-filter" class="text-slate-600">ประเภท:</label>
@@ -431,6 +435,7 @@
             applySortAndRender();
         }
 
+        // 3. ปรับ Logic การจัดเรียง: หากเป็นวันเดียวกัน ให้ดึงเวลาล่าสุด (บันทึกทีหลังสุด) ขึ้นก่อนเสมอ 🌟
         function applySortAndRender() {
             let processedRecords = [...window.transactions];
             
@@ -453,12 +458,14 @@
 
                 if (currentSortKey === 'date') {
                     if (dateOnlyA === dateOnlyB) {
-                        return new Date(a.date) - new Date(b.date);
+                        // วันเดียวกัน: เอาเวลาที่มีค่ามากที่สุด (ล่าสุด) ขึ้นโชว์ก่อน 🌟
+                        return new Date(b.date) - new Date(a.date);
                     }
+                    // ต่างวันกัน: เรียงลำดับตามปกติจากเงื่อนไขของหัวตาราง (ล่าสุดขึ้นก่อน)
                     return currentSortDirection === 'desc' ? new Date(dateOnlyB) - new Date(dateOnlyA) : new Date(dateOnlyA) - new Date(dateOnlyB);
                 } else if (currentSortKey === 'amount') {
                     if (dateOnlyA === dateOnlyB) {
-                        return new Date(a.date) - new Date(b.date);
+                        return new Date(b.date) - new Date(a.date); // วันเดียวกันคงเสถียรเอาเวลาล่าสุดขึ้นก่อน
                     }
                     return currentSortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
                 }
@@ -545,7 +552,7 @@
             document.getElementById('description').value = item.description;
             document.getElementById('amount').value = item.amount;
             document.getElementById('notes').value = item.notes || ""; 
-            document.getElementById('payment-method').value = item.paymentMethod || "เงินโอน";
+            document.getElementById('payment-method').value = item.paymentMethod || "เงินสด";
 
             document.getElementById('form-title').innerText = "📝 แก้ไขรายการข้อมูล";
             document.getElementById('btn-submit').innerText = "อัปเดตข้อมูล";
@@ -563,7 +570,7 @@
             document.getElementById('amount').value = '';
             document.getElementById('notes').value = ''; 
             document.getElementById('type').value = 'income'; 
-            document.getElementById('payment-method').value = 'เงินโอน'; 
+            document.getElementById('payment-method').value = 'เงินสด'; 
             document.getElementById('date').value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
         }
 
@@ -600,7 +607,30 @@
         document.getElementById('filter-start').addEventListener('change', () => { currentPage = 1; dateStartFilter = document.getElementById('filter-start').value; applySortAndRender(); });
         document.getElementById('filter-end').addEventListener('change', () => { currentPage = 1; dateEndFilter = document.getElementById('filter-end').value; applySortAndRender(); });
         document.getElementById('btn-clear-date').addEventListener('click', () => { document.getElementById('filter-start').value = ''; document.getElementById('filter-end').value = ''; dateStartFilter = ''; dateEndFilter = ''; currentPage = 1; applySortAndRender(); });
-        document.getElementById('search-input').addEventListener('input', (e) => { searchQuery = e.target.value; currentPage = 1; applySortAndRender(); });
+        
+        // ฟังก์ชันจัดการช่องค้นหาและสลับการแสดงผลของปุ่มกากบาทล้างคำสั่ง 🌟
+        const searchInput = document.getElementById('search-input');
+        const btnClearSearch = document.getElementById('btn-clear-search');
+
+        searchInput.addEventListener('input', (e) => { 
+            searchQuery = e.target.value; 
+            currentPage = 1; 
+            if (searchQuery.length > 0) {
+                btnClearSearch.classList.remove('hidden');
+            } else {
+                btnClearSearch.classList.add('hidden');
+            }
+            applySortAndRender(); 
+        });
+
+        btnClearSearch.addEventListener('click', () => {
+            searchInput.value = '';
+            searchQuery = '';
+            currentPage = 1;
+            btnClearSearch.classList.add('hidden');
+            applySortAndRender();
+        });
+
         document.getElementById('btn-cancel-edit').addEventListener('click', () => window.resetFormMode());
         document.getElementById('type-filter').addEventListener('change', (e) => { selectedTypeFilter = e.target.value; currentPage = 1; applySortAndRender(); });
         document.getElementById('th-date').addEventListener('click', () => { currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc'; currentSortKey = 'date'; applySortAndRender(); });
@@ -706,7 +736,6 @@
             XLSX.writeFile(workbook, `สมุดเงินสดร้านS2ซักอบรีด_${start}_ถึง_${end}.xlsx`);
         });
 
-        // เปิดรันตรวจสอบสิทธิ์เข้าใช้งานทันทีเมื่อโหลดหน้าเว็บ
         checkAuthState();
     </script>
 </body>
