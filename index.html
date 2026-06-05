@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.01 (Supabase Powered)</title>
+    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.02 (Supabase Powered)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -15,7 +15,7 @@
         <div class="bg-white/95 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-white/20 backdrop-blur-xs transform transition-all">
             <div class="text-5xl mb-4 animate-bounce">🧺</div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-100 text-slate-700 text-xs px-1.5 py-0.5 rounded-sm font-semibold ml-0.5">v0.01</span></p>
+            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-100 text-slate-700 text-xs px-1.5 py-0.5 rounded-sm font-semibold ml-0.5">v0.02</span></p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-sky-400 text-slate-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@
                 <span class="text-2xl">🧺</span>
                 <div>
                     <h2 class="font-bold text-sm sm:text-base tracking-wide text-white">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.01</p>
+                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.02</p>
                 </div>
             </div>
             
@@ -230,7 +230,7 @@
         let dateEndFilter = '';   
         let sortedRecords = [];
         let currentSortKey = 'date'; 
-        let currentSortDirection = 'desc'; // ค่าเริ่มต้นคือล่าสุดย้อนหาเก่า 🔽
+        let currentSortDirection = 'desc'; 
 
         // --- ระบบตรวจสอบสถานะล็อกอิน Supabase Auth ---
         async function checkAuthState() {
@@ -352,8 +352,9 @@
             return Number(amount).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function getThaiZoneISOString() {
-            const now = new Date();
+        // แปลง String วันและเวลาให้ออกมาเป็นโครงโซนเวลาไทยแบบเสถียร (Asia/Bangkok GMT+7)
+        function getThaiZoneISOString(customDateStr) {
+            const now = customDateStr ? new Date(customDateStr) : new Date();
             const options = {
                 timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit',
                 hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
@@ -436,7 +437,7 @@
             applySortAndRender();
         }
 
-        // 🌟 ปรับแต่ง Logic การสลับและเรียงลำดับวัน+เวลา ย้อนจากปัจจุบันไปอดีต หรือสลับ อดีตมาปัจจุบัน 🌟
+        // 🌟 แก้ไข Logic การเรียงลำดับแบบผูกรวม วัน+เวลา แบบเบ็ดเสร็จเพื่อให้กลับทิศทางได้สมบูรณ์เมื่อกดลูกศร 🌟
         function applySortAndRender() {
             let processedRecords = [...window.transactions];
             
@@ -454,21 +455,22 @@
             }
 
             processedRecords.sort((a, b) => {
-                const timeA = new Date(a.date).getTime();
-                const timeB = new Date(b.date).getTime();
+                // แทนที่เว้นวรรคด้วย T เพื่อแปลงเป็น ISO Format สำหรับประมวลผล Timestamp
+                const timeA = new Date(a.date.replace(' ', 'T')).getTime();
+                const timeB = new Date(b.date.replace(' ', 'T')).getTime();
 
                 if (currentSortKey === 'date') {
-                    // เรียงตามวันและเวลาแมตช์รวมกัน
                     if (currentSortDirection === 'desc') {
-                        return timeB - timeA; // วันเวลาปัจจุบัน (ล่าสุด) ย้อนลงไปหาเก่า 🔽
+                        return timeB - timeA; // 🔽 วันเวลาปัจจุบัน (ล่าสุด) ขึ้นก่อน -> ย้อนหาเก่าสุด
                     } else {
-                        return timeA - timeB; // วันเวลาเก่าสุด ไล่ขึ้นมาปัจจุบัน 🔼
+                        return timeA - timeB; // 🔼 วันเวลาเก่าที่สุด ขึ้นก่อน -> ไล่มาหาใหม่สุด
                     }
                 } else if (currentSortKey === 'amount') {
                     const amtA = parseFloat(a.amount);
                     const amtB = parseFloat(b.amount);
                     if (amtA === amtB) {
-                        return timeB - timeA; // ถ้ายอดเท่ากัน เอาวันเวลาล่าสุดขึ้นก่อนเป็นหลักเสถียร
+                        // ยอดเท่ากัน ให้ใช้ตัวจัดเรียงทิศทางของเวลาหลักเข้ามาช่วยตัดสิน
+                        return currentSortDirection === 'desc' ? timeB - timeA : timeA - timeB;
                     }
                     return currentSortDirection === 'asc' ? amtA - amtB : amtB - amtA;
                 }
@@ -508,7 +510,6 @@
                     }
                 }
 
-                // ดึงเฉพาะวันเวลามาแสดงให้สวยงามในหน้าจอ
                 const showDateTime = t.date;
 
                 const tr = document.createElement('tr');
@@ -638,7 +639,7 @@
         document.getElementById('btn-cancel-edit').addEventListener('click', () => window.resetFormMode());
         document.getElementById('type-filter').addEventListener('change', (e) => { selectedTypeFilter = e.target.value; currentPage = 1; applySortAndRender(); });
         
-        // สลับลูกศรจัดเรียง วันเวลาปัจจุบัน <-> วันเวลาเก่าสุด 🌟
+        // สลับลูกศรจัดเรียง วันเวลาปัจจุบัน <-> วันเวลาเก่าสุด
         document.getElementById('th-date').addEventListener('click', () => { 
             currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc'; 
             currentSortKey = 'date'; 
@@ -656,12 +657,12 @@
             e.preventDefault();
             const editId = document.getElementById('edit-id').value;
             const itemType = document.getElementById('type').value;
-            
             const inputDateValue = document.getElementById('date').value; 
-            const nowTime = new Date();
-            const pad = (num) => String(num).padStart(2, '0');
-            const timeString = `${pad(nowTime.getHours())}:${pad(nowTime.getMinutes())}:${pad(nowTime.getSeconds())}`;
-            const fullDateTimeStampString = `${inputDateValue} ${timeString}`;
+            
+            // ดึงโครง YYYY-MM-DD HH:MM:SS ของไทยปัจจุบันมาสับแยกเวลาจริง
+            const currentThaiTime = getThaiZoneISOString(); 
+            const timeStringOnly = currentThaiTime.substring(11, 19); 
+            const fullDateTimeStampString = `${inputDateValue} ${timeStringOnly}`; 
 
             const payload = {
                 date: fullDateTimeStampString, 
