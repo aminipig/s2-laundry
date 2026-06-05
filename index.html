@@ -15,7 +15,7 @@
         <div class="bg-white/95 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-white/20 backdrop-blur-xs transform transition-all">
             <div class="text-5xl mb-4 animate-bounce">🧺</div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน</p>
+            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-100 text-slate-700 text-xs px-1.5 py-0.5 rounded-sm font-semibold ml-0.5">v0.01</span></p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-sky-400 text-slate-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -33,7 +33,8 @@
                 <span class="text-2xl">🧺</span>
                 <div>
                     <h2 class="font-bold text-sm sm:text-base tracking-wide text-white">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.01</p> </div>
+                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.01</p>
+                </div>
             </div>
             
             <div class="flex items-center gap-4 sm:gap-6">
@@ -184,11 +185,11 @@
                         <thead>
                             <tr class="bg-slate-50 text-slate-600 text-sm uppercase">
                                 <th class="p-3 w-12">ลำดับ</th>
-                                <th class="p-3 cursor-pointer hover:bg-slate-100" id="th-date">วันที่ <span id="sort-icon-date">🔽</span></th>
+                                <th class="p-3 cursor-pointer select-none hover:bg-slate-100" id="th-date">วันที่และเวลา <span id="sort-icon-date">🔽</span></th>
                                 <th class="p-3">รายการ</th>
                                 <th class="p-3">ประเภท</th>
                                 <th class="p-3 text-center">ช่องทางชำระเงิน</th>
-                                <th class="p-3 text-right cursor-pointer hover:bg-slate-100" id="th-amount">จำนวนเงิน <span id="sort-icon-amount" class="text-gray-400"></span></th>
+                                <th class="p-3 text-right cursor-pointer select-none hover:bg-slate-100" id="th-amount">จำนวนเงิน <span id="sort-icon-amount" class="text-gray-400"></span></th>
                                 <th class="p-3 text-center w-24">จัดการ</th>
                             </tr>
                         </thead>
@@ -229,7 +230,7 @@
         let dateEndFilter = '';   
         let sortedRecords = [];
         let currentSortKey = 'date'; 
-        let currentSortDirection = 'desc'; 
+        let currentSortDirection = 'desc'; // ค่าเริ่มต้นคือล่าสุดย้อนหาเก่า 🔽
 
         // --- ระบบตรวจสอบสถานะล็อกอิน Supabase Auth ---
         async function checkAuthState() {
@@ -435,7 +436,7 @@
             applySortAndRender();
         }
 
-        // 3. ปรับ Logic การจัดเรียง: หากเป็นวันเดียวกัน ให้ดึงเวลาล่าสุด (บันทึกทีหลังสุด) ขึ้นก่อนเสมอ 🌟
+        // 🌟 ปรับแต่ง Logic การสลับและเรียงลำดับวัน+เวลา ย้อนจากปัจจุบันไปอดีต หรือสลับ อดีตมาปัจจุบัน 🌟
         function applySortAndRender() {
             let processedRecords = [...window.transactions];
             
@@ -453,21 +454,23 @@
             }
 
             processedRecords.sort((a, b) => {
-                let dateOnlyA = a.date.substring(0, 10);
-                let dateOnlyB = b.date.substring(0, 10);
+                const timeA = new Date(a.date).getTime();
+                const timeB = new Date(b.date).getTime();
 
                 if (currentSortKey === 'date') {
-                    if (dateOnlyA === dateOnlyB) {
-                        // วันเดียวกัน: เอาเวลาที่มีค่ามากที่สุด (ล่าสุด) ขึ้นโชว์ก่อน 🌟
-                        return new Date(b.date) - new Date(a.date);
+                    // เรียงตามวันและเวลาแมตช์รวมกัน
+                    if (currentSortDirection === 'desc') {
+                        return timeB - timeA; // วันเวลาปัจจุบัน (ล่าสุด) ย้อนลงไปหาเก่า 🔽
+                    } else {
+                        return timeA - timeB; // วันเวลาเก่าสุด ไล่ขึ้นมาปัจจุบัน 🔼
                     }
-                    // ต่างวันกัน: เรียงลำดับตามปกติจากเงื่อนไขของหัวตาราง (ล่าสุดขึ้นก่อน)
-                    return currentSortDirection === 'desc' ? new Date(dateOnlyB) - new Date(dateOnlyA) : new Date(dateOnlyA) - new Date(dateOnlyB);
                 } else if (currentSortKey === 'amount') {
-                    if (dateOnlyA === dateOnlyB) {
-                        return new Date(b.date) - new Date(a.date); // วันเดียวกันคงเสถียรเอาเวลาล่าสุดขึ้นก่อน
+                    const amtA = parseFloat(a.amount);
+                    const amtB = parseFloat(b.amount);
+                    if (amtA === amtB) {
+                        return timeB - timeA; // ถ้ายอดเท่ากัน เอาวันเวลาล่าสุดขึ้นก่อนเป็นหลักเสถียร
                     }
-                    return currentSortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
+                    return currentSortDirection === 'asc' ? amtA - amtB : amtB - amtA;
                 }
                 return 0;
             });
@@ -505,12 +508,13 @@
                     }
                 }
 
-                const showDateOnly = t.date.substring(0, 10);
+                // ดึงเฉพาะวันเวลามาแสดงให้สวยงามในหน้าจอ
+                const showDateTime = t.date;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-3 text-gray-400 font-medium">${rowNumber}</td>
-                    <td class="p-3">${showDateOnly}</td>
+                    <td class="p-3 font-mono text-slate-600">${showDateTime}</td>
                     <td class="p-3 font-medium text-slate-700">${t.description}</td>
                     <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
                     <td class="p-3 text-center">${paymentMethodBadge}</td>
@@ -608,7 +612,7 @@
         document.getElementById('filter-end').addEventListener('change', () => { currentPage = 1; dateEndFilter = document.getElementById('filter-end').value; applySortAndRender(); });
         document.getElementById('btn-clear-date').addEventListener('click', () => { document.getElementById('filter-start').value = ''; document.getElementById('filter-end').value = ''; dateStartFilter = ''; dateEndFilter = ''; currentPage = 1; applySortAndRender(); });
         
-        // ฟังก์ชันจัดการช่องค้นหาและสลับการแสดงผลของปุ่มกากบาทล้างคำสั่ง 🌟
+        // ฟังก์ชันจัดการช่องค้นหาและสลับการแสดงผลของปุ่มกากบาทล้างคำสั่ง
         const searchInput = document.getElementById('search-input');
         const btnClearSearch = document.getElementById('btn-clear-search');
 
@@ -633,7 +637,14 @@
 
         document.getElementById('btn-cancel-edit').addEventListener('click', () => window.resetFormMode());
         document.getElementById('type-filter').addEventListener('change', (e) => { selectedTypeFilter = e.target.value; currentPage = 1; applySortAndRender(); });
-        document.getElementById('th-date').addEventListener('click', () => { currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc'; currentSortKey = 'date'; applySortAndRender(); });
+        
+        // สลับลูกศรจัดเรียง วันเวลาปัจจุบัน <-> วันเวลาเก่าสุด 🌟
+        document.getElementById('th-date').addEventListener('click', () => { 
+            currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc'; 
+            currentSortKey = 'date'; 
+            applySortAndRender(); 
+        });
+        
         document.getElementById('th-amount').addEventListener('click', () => { currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc'; currentSortKey = 'amount'; applySortAndRender(); });
         document.getElementById('per-page').addEventListener('change', (e) => { itemsPerPage = e.target.value; currentPage = 1; renderTable(); });
         document.getElementById('btn-prev').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); } });
@@ -687,7 +698,7 @@
 
             let chronologicalRecords = [...sortedRecords];
 
-            const headers = ['วัน เดือน ปี', 'รายการ', 'ช่องทางชำระเงิน', 'รายรับ (บาท)', 'รายจ่าย (บาท)', 'คงเหลือ (บาท)', 'หมายเหตุ'];
+            const headers = ['วัน เดือน ปี เวลา', 'รายการ', 'ช่องทางชำระเงิน', 'รายรับ (บาท)', 'รายจ่าย (บาท)', 'คงเหลือ (บาท)', 'หมายเหตุ'];
             const dataRows = [];
             let currentBalance = 0, sumIncome = 0, sumExpense = 0;
             const thaiShortMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
@@ -701,9 +712,10 @@
                 else { currentBalance -= amt; sumExpense += amt; }
                 
                 const dateObj = new Date(t.date.substring(0, 10));
-                const formattedDate = `${dateObj.getDate()} ${thaiShortMonths[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
+                const timePart = t.date.substring(11, 16) || "";
+                const formattedDate = `${dateObj.getDate()} ${thaiShortMonths[dateObj.getMonth()]} ${dateObj.getFullYear() + 543} (${timePart} น.)`;
                 
-                const methodStr = t.paymentMethod || "เงินโอน";
+                const methodStr = t.paymentMethod || "เงินสด";
                 
                 dataRows.push([formattedDate, t.description, methodStr, isIncome ? amt : "", !isIncome ? amt : "", currentBalance, t.notes || "-"]);
                 exportedItemsSummary.push(`[${t.date}] ${t.description} (${methodStr}) (${isIncome?'รายรับ':'รายจ่าย'}: ${amt} บ.)`);
@@ -726,7 +738,7 @@
                     if (R > 0 && (C === 3 || C === 4 || C === 5) && typeof worksheet[addr].v === 'number') worksheet[addr].z = '#,##0.00';
                 }
             }
-            worksheet['!cols'] = [{ wch: 18 }, { wch: 35 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
+            worksheet['!cols'] = [{ wch: 24 }, { wch: 35 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "สมุดเงินสด");
             
