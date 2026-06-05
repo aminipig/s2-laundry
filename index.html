@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.05 (Supabase Powered)</title>
+    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.07 (Supabase Powered)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -15,7 +15,7 @@
         <div class="bg-white/95 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-white/20 backdrop-blur-xs transform transition-all">
             <div class="text-5xl mb-4 animate-bounce">🧺</div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-100 text-slate-700 text-xs px-1.5 py-0.5 rounded-sm font-semibold ml-0.5">v0.05</span></p>
+            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-700 text-white text-[10px] px-2 py-0.5 rounded-md font-bold ml-1 tracking-wide shadow-xs border border-slate-600/30">v0.07</span></p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-sky-400 text-slate-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@
                 <span class="text-2xl">🧺</span>
                 <div>
                     <h2 class="font-bold text-sm sm:text-base tracking-wide text-white">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.05</p>
+                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.07</p>
                 </div>
             </div>
             
@@ -506,12 +506,14 @@
                     }
                 }
 
-                const showDateOnly = t.date.substring(0, 10);
+                // 🌟 ปรับปรุงตรรกะ v0.07: เปลี่ยนการแสดงผลจาก YYYY-MM-DD เป็น YYYY/MM/DD ตามคำสั่งเรียบร้อยครับคุณปิง 🌟
+                const rawDateStr = t.date.substring(0, 10); // ได้ฟอร์แมต "2026-06-05"
+                const showSlashDate = rawDateStr.replace(/-/g, '/'); // แปลงเป็น "2026/06/05"
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-3 text-gray-400 font-medium">${rowNumber}</td>
-                    <td class="p-3 font-mono text-slate-600">${showDateOnly}</td>
+                    <td class="p-3 font-mono text-slate-600">${showSlashDate}</td>
                     <td class="p-3 font-medium text-slate-700">${t.description}</td>
                     <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
                     <td class="p-3 text-center">${paymentMethodBadge}</td>
@@ -557,11 +559,10 @@
 
             document.getElementById('form-title').innerText = "📝 แก้ไขรายการข้อมูล";
             document.getElementById('btn-submit').innerText = "อัปเดตข้อมูล";
-            document.getElementById('btn-submit').className = "w-full bg-amber-500 text-white p-2 rounded-md font-medium hover:bg-amber-600 transition cursor-pointer shadow-xs";
+            document.getElementById('btn-submit').className = "w-full bg-amber-500 text-white p-2 rounded-md font-medium hover:bg-amber-600 Transition cursor-pointer shadow-xs";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
         }
 
-        // 🌟 ปรับปรุงตรรกะ v0.05: ฝังโค้ดดึงวันที่ปัจจุบันใส่ช่องอินพุตโดยตรงทุกครั้งที่สั่งรีเซ็ตล้างฟอร์มครับ 🌟
         window.resetFormMode = function() {
             document.getElementById('edit-id').value = "";
             document.getElementById('form-title').innerText = "บันทึกรายการใหม่";
@@ -574,7 +575,7 @@
             document.getElementById('type').value = 'income'; 
             document.getElementById('payment-method').value = 'เงินสด'; 
             
-            // ดึงค่าวันที่ปัจจุบันจากเครื่องผู้ใช้ล็อกเข้าสู่ช่อง Input โดยตรงทุกล็อตการรีเซ็ตฟอร์ม
+            // เติมค่าวันที่ปัจจุบันของระบบลงช่อง input แดงโดยอัตโนมัติ (คงฟอร์แมตมาตรฐานของ HTML input date)
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -750,8 +751,6 @@
         });
 
         checkAuthState();
-        
-        // รันสคริปต์โหลดค่าวันปัจจุบันใส่ช่องอินพุตในรอบแรกสุดตั้งแต่แอปบูตขึ้นมา
         window.resetFormMode();
     </script>
 </body>
