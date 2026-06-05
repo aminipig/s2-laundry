@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.03 (Supabase Powered)</title>
+    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.05 (Supabase Powered)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -15,7 +15,7 @@
         <div class="bg-white/95 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-white/20 backdrop-blur-xs transform transition-all">
             <div class="text-5xl mb-4 animate-bounce">🧺</div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-100 text-slate-700 text-xs px-1.5 py-0.5 rounded-sm font-semibold ml-0.5">v0.03</span></p>
+            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-100 text-slate-700 text-xs px-1.5 py-0.5 rounded-sm font-semibold ml-0.5">v0.05</span></p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-sky-400 text-slate-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@
                 <span class="text-2xl">🧺</span>
                 <div>
                     <h2 class="font-bold text-sm sm:text-base tracking-wide text-white">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.03</p>
+                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.05</p>
                 </div>
             </div>
             
@@ -185,7 +185,7 @@
                         <thead>
                             <tr class="bg-slate-50 text-slate-600 text-sm uppercase">
                                 <th class="p-3 w-12">ลำดับ</th>
-                                <th class="p-3 cursor-pointer select-none hover:bg-slate-100" id="th-date">วันที่และเวลา <span id="sort-icon-date">🔽</span></th>
+                                <th class="p-3 cursor-pointer select-none hover:bg-slate-100" id="th-date">วันที่ <span id="sort-icon-date">🔽</span></th>
                                 <th class="p-3">รายการ</th>
                                 <th class="p-3">ประเภท</th>
                                 <th class="p-3 text-center">ช่องทางชำระเงิน</th>
@@ -506,12 +506,12 @@
                     }
                 }
 
-                const showDateTime = t.date;
+                const showDateOnly = t.date.substring(0, 10);
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-3 text-gray-400 font-medium">${rowNumber}</td>
-                    <td class="p-3 font-mono text-slate-600">${showDateTime}</td>
+                    <td class="p-3 font-mono text-slate-600">${showDateOnly}</td>
                     <td class="p-3 font-medium text-slate-700">${t.description}</td>
                     <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
                     <td class="p-3 text-center">${paymentMethodBadge}</td>
@@ -561,6 +561,7 @@
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
         }
 
+        // 🌟 ปรับปรุงตรรกะ v0.05: ฝังโค้ดดึงวันที่ปัจจุบันใส่ช่องอินพุตโดยตรงทุกครั้งที่สั่งรีเซ็ตล้างฟอร์มครับ 🌟
         window.resetFormMode = function() {
             document.getElementById('edit-id').value = "";
             document.getElementById('form-title').innerText = "บันทึกรายการใหม่";
@@ -573,7 +574,7 @@
             document.getElementById('type').value = 'income'; 
             document.getElementById('payment-method').value = 'เงินสด'; 
             
-            // 2. ตั้งค่าให้ช่องปฏิทินแสดงเป็นวันที่ปัจจุบันของเครื่องเสมอ ไม่เป็นค่าว่าง 🌟
+            // ดึงค่าวันที่ปัจจุบันจากเครื่องผู้ใช้ล็อกเข้าสู่ช่อง Input โดยตรงทุกล็อตการรีเซ็ตฟอร์ม
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -659,7 +660,6 @@
             const itemType = document.getElementById('type').value;
             const inputDateValue = document.getElementById('date').value; 
             
-            // 1. ถอดระบบผูกล็อกเวลากลางออก และดึงเวลาปัจจุบันของระบบเครื่องโดยตรง 🌟
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -701,7 +701,7 @@
 
             let chronologicalRecords = [...sortedRecords];
 
-            const headers = ['วัน เดือน ปี เวลา', 'รายการ', 'ช่องทางชำระเงิน', 'รายรับ (บาท)', 'รายจ่าย (บาท)', 'คงเหลือ (บาท)', 'หมายเหตุ'];
+            const headers = ['วัน เดือน ปี', 'รายการ', 'ช่องทางชำระเงิน', 'รายรับ (บาท)', 'รายจ่าย (บาท)', 'คงเหลือ (บาท)', 'หมายเหตุ'];
             const dataRows = [];
             let currentBalance = 0, sumIncome = 0, sumExpense = 0;
             const thaiShortMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
@@ -715,9 +715,7 @@
                 else { currentBalance -= amt; sumExpense += amt; }
                 
                 const dateObj = new Date(t.date.substring(0, 10));
-                const timePart = t.date.substring(11, 16) || "";
-                const formattedDate = `${dateObj.getDate()} ${thaiShortMonths[dateObj.getMonth()]} ${dateObj.getFullYear() + 543} (${timePart} น.)`;
-                
+                const formattedDate = `${dateObj.getDate()} ${thaiShortMonths[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
                 const methodStr = t.paymentMethod || "เงินสด";
                 
                 dataRows.push([formattedDate, t.description, methodStr, isIncome ? amt : "", !isIncome ? amt : "", currentBalance, t.notes || "-"]);
@@ -741,7 +739,7 @@
                     if (R > 0 && (C === 3 || C === 4 || C === 5) && typeof worksheet[addr].v === 'number') worksheet[addr].z = '#,##0.00';
                 }
             }
-            worksheet['!cols'] = [{ wch: 24 }, { wch: 35 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
+            worksheet['!cols'] = [{ wch: 18 }, { wch: 35 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "สมุดเงินสด");
             
@@ -753,9 +751,8 @@
 
         checkAuthState();
         
-        // รันคำสั่งเติมวันที่เครื่องอัตโนมัติเมื่อตัวเว็บถูกโหลดขึ้นมาทำงานครั้งแรก
-        const initToday = new Date();
-        document.getElementById('date').value = `${initToday.getFullYear()}-${String(initToday.getMonth() + 1).padStart(2, '0')}-${String(initToday.getDate()).padStart(2, '0')}`;
+        // รันสคริปต์โหลดค่าวันปัจจุบันใส่ช่องอินพุตในรอบแรกสุดตั้งแต่แอปบูตขึ้นมา
+        window.resetFormMode();
     </script>
 </body>
 </html>
