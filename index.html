@@ -3,11 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.07 (Supabase Powered)</title>
+    <title>ระบบบัญชี ร้าน S2 ซักอบรีด v0.08 (Supabase Powered)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 🌟 สไตล์ปรับแต่งเพื่อซ่อนปุ่มปฏิทินดั้งเดิมของบราวเซอร์และแปลงฟอร์แมตเป็น YYYY/MM/DD ให้สวยงาม 🌟 */
+        .custom-date-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .custom-date-input {
+            color: transparent !important;
+            select-behavior: auto;
+        }
+        .custom-date-input::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 20;
+        }
+        .date-overlay-text {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            pointer-events: none;
+            font-family: monospace;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body class="bg-slate-50 font-sans antialiased text-gray-800">
 
@@ -15,7 +45,7 @@
         <div class="bg-white/95 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-white/20 backdrop-blur-xs transform transition-all">
             <div class="text-5xl mb-4 animate-bounce">🧺</div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1">ร้าน S2 ซักอบรีด</h2>
-            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-700 text-white text-[10px] px-2 py-0.5 rounded-md font-bold ml-1 tracking-wide shadow-xs border border-slate-600/30">v0.07</span></p>
+            <p class="text-sm text-slate-600 mb-6">ระบบบัญชีรายรับ-รายจ่ายภายในร้าน <span class="bg-slate-700 text-white text-[10px] px-2 py-0.5 rounded-md font-bold ml-1 tracking-wide shadow-xs border border-slate-600/30">v0.08</span></p>
             
             <button id="btn-login-google" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 hover:border-sky-400 text-slate-700 font-semibold py-2.5 px-4 rounded-xl shadow-xs hover:shadow-md transition duration-200 cursor-pointer text-sm">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -33,7 +63,7 @@
                 <span class="text-2xl">🧺</span>
                 <div>
                     <h2 class="font-bold text-sm sm:text-base tracking-wide text-white">S2 Laundry Accounting</h2>
-                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.07</p>
+                    <p class="text-[10px] text-sky-300 font-mono -mt-0.5">version 0.08</p>
                 </div>
             </div>
             
@@ -93,7 +123,10 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-slate-700">วันที่</label>
-                        <input type="date" id="date" required class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-xs focus:border-sky-500 focus:outline-hidden">
+                        <div class="custom-date-container mt-1">
+                            <span id="date-overlay" class="date-overlay-text text-slate-700"></span>
+                            <input type="date" id="date" required class="custom-date-input block w-full p-2 border border-slate-300 rounded-md shadow-xs focus:border-sky-500 focus:outline-hidden bg-white">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700">ประเภท</label>
@@ -136,9 +169,15 @@
                         <p class="text-xs text-slate-500 mt-0.5">*ระบบจะกรองตั้งแต่วันต้นปีให้อัตโนมัติ</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 text-sm">
-                        <input type="date" id="filter-start" class="p-1.5 border border-slate-300 rounded-md bg-white w-[135px] sm:w-auto">
+                        <div class="custom-date-container w-[135px] sm:w-auto">
+                            <span id="start-overlay" class="date-overlay-text text-slate-700"></span>
+                            <input type="date" id="filter-start" class="custom-date-input p-1.5 border border-slate-300 rounded-md bg-white w-full">
+                        </div>
                         <span class="text-slate-500">ถึง</span>
-                        <input type="date" id="filter-end" class="p-1.5 border border-slate-300 rounded-md bg-white w-[135px] sm:w-auto">
+                        <div class="custom-date-container w-[135px] sm:w-auto">
+                            <span id="end-overlay" class="date-overlay-text text-slate-700"></span>
+                            <input type="date" id="filter-end" class="custom-date-input p-1.5 border border-slate-300 rounded-md bg-white w-full">
+                        </div>
                         <button id="btn-clear-date" class="bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-md text-xs font-medium hover:bg-slate-300 transition cursor-pointer shrink-0">ล้างค่า</button>
                         <button id="btn-export" class="bg-emerald-600 text-white px-3 py-1.5 rounded-md font-medium hover:bg-emerald-700 transition flex items-center gap-1 cursor-pointer shrink-0 shadow-xs">
                             📊 Excel
@@ -479,6 +518,17 @@
             renderTable();
         }
 
+        // 🌟 ฟังก์ชันช่วยจัดรูปแบบเพื่อแปลงหน้าตา YYYY-MM-DD เป็น YYYY/MM/DD ให้กล่อง Overlay 🌟
+        function updateDateOverlay(inputElementId, overlayElementId) {
+            const inputVal = document.getElementById(inputElementId).value;
+            const overlayEl = document.getElementById(overlayElementId);
+            if (inputVal) {
+                overlayEl.innerText = inputVal.replace(/-/g, '/');
+            } else {
+                overlayEl.innerText = '';
+            }
+        }
+
         function renderTable() {
             const tbody = document.getElementById('transaction-table-body');
             tbody.innerHTML = '';
@@ -506,14 +556,12 @@
                     }
                 }
 
-                // 🌟 ปรับปรุงตรรกะ v0.07: เปลี่ยนการแสดงผลจาก YYYY-MM-DD เป็น YYYY/MM/DD ตามคำสั่งเรียบร้อยครับคุณปิง 🌟
-                const rawDateStr = t.date.substring(0, 10); // ได้ฟอร์แมต "2026-06-05"
-                const showSlashDate = rawDateStr.replace(/-/g, '/'); // แปลงเป็น "2026/06/05"
+                const showDateOnly = t.date.substring(0, 10).replace(/-/g, '/');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-3 text-gray-400 font-medium">${rowNumber}</td>
-                    <td class="p-3 font-mono text-slate-600">${showSlashDate}</td>
+                    <td class="p-3 font-mono text-slate-600">${showDateOnly}</td>
                     <td class="p-3 font-medium text-slate-700">${t.description}</td>
                     <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-semibold ${t.type === 'income' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${t.type === 'income' ? 'รายรับ' : 'รายจ่าย'}</span></td>
                     <td class="p-3 text-center">${paymentMethodBadge}</td>
@@ -559,8 +607,11 @@
 
             document.getElementById('form-title').innerText = "📝 แก้ไขรายการข้อมูล";
             document.getElementById('btn-submit').innerText = "อัปเดตข้อมูล";
-            document.getElementById('btn-submit').className = "w-full bg-amber-500 text-white p-2 rounded-md font-medium hover:bg-amber-600 Transition cursor-pointer shadow-xs";
+            document.getElementById('btn-submit').className = "w-full bg-amber-500 text-white p-2 rounded-md font-medium hover:bg-amber-600 transition cursor-pointer shadow-xs";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            
+            // ซิงค์เลเยอร์หน้ากากตัวอักษรกล่องเลือกวันที่ตอนกดแก้ไข
+            updateDateOverlay('date', 'date-overlay');
         }
 
         window.resetFormMode = function() {
@@ -575,12 +626,14 @@
             document.getElementById('type').value = 'income'; 
             document.getElementById('payment-method').value = 'เงินสด'; 
             
-            // เติมค่าวันที่ปัจจุบันของระบบลงช่อง input แดงโดยอัตโนมัติ (คงฟอร์แมตมาตรฐานของ HTML input date)
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             document.getElementById('date').value = `${year}-${month}-${day}`;
+            
+            // ซิงค์ป้ายสแลชหน้ากากกล่องเลือกวันที่ให้ทำงาน
+            updateDateOverlay('date', 'date-overlay');
         }
 
         // จัดการลบรายการในตาราง s2_records
@@ -613,9 +666,31 @@
             });
         }
 
-        document.getElementById('filter-start').addEventListener('change', () => { currentPage = 1; dateStartFilter = document.getElementById('filter-start').value; applySortAndRender(); });
-        document.getElementById('filter-end').addEventListener('change', () => { currentPage = 1; dateEndFilter = document.getElementById('filter-end').value; applySortAndRender(); });
-        document.getElementById('btn-clear-date').addEventListener('click', () => { document.getElementById('filter-start').value = ''; document.getElementById('filter-end').value = ''; dateStartFilter = ''; dateEndFilter = ''; currentPage = 1; applySortAndRender(); });
+        // ตัวตรวจจับผูกเงื่อนไขความเปลี่ยนแปลงกล่องเลือกปฏิทินเพื่ออัปเดตหน้ากากสแลช 3 จุด 🌟
+        document.getElementById('date').addEventListener('change', () => updateDateOverlay('date', 'date-overlay'));
+        document.getElementById('filter-start').addEventListener('change', () => { 
+            currentPage = 1; 
+            dateStartFilter = document.getElementById('filter-start').value; 
+            updateDateOverlay('filter-start', 'start-overlay');
+            applySortAndRender(); 
+        });
+        document.getElementById('filter-end').addEventListener('change', () => { 
+            currentPage = 1; 
+            dateEndFilter = document.getElementById('filter-end').value; 
+            updateDateOverlay('filter-end', 'end-overlay');
+            applySortAndRender(); 
+        });
+        
+        document.getElementById('btn-clear-date').addEventListener('click', () => { 
+            document.getElementById('filter-start').value = ''; 
+            document.getElementById('filter-end').value = ''; 
+            dateStartFilter = ''; 
+            dateEndFilter = ''; 
+            currentPage = 1; 
+            document.getElementById('start-overlay').innerText = '';
+            document.getElementById('end-overlay').innerText = '';
+            applySortAndRender(); 
+        });
         
         const searchInput = document.getElementById('search-input');
         const btnClearSearch = document.getElementById('btn-clear-search');
@@ -652,7 +727,7 @@
         document.getElementById('per-page').addEventListener('change', (e) => { itemsPerPage = e.target.value; currentPage = 1; renderTable(); });
         document.getElementById('btn-prev').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); } });
         document.getElementById('btn-next').addEventListener('click', () => { if (currentPage < Math.ceil(sortedRecords.length / parseInt(itemsPerPage))) { currentPage++; renderTable(); } });
-        document.getElementById('year-filter').addEventListener('change', (e) => { selectedYear = parseInt(e.target.value); dateStartFilter = `${selectedYear}-01-01`; dateEndFilter = `${selectedYear}-12-31`; document.getElementById('filter-start').value = dateStartFilter; document.getElementById('filter-end').value = dateEndFilter; currentPage = 1; updateUI(); });
+        document.getElementById('year-filter').addEventListener('change', (e) => { selectedYear = parseInt(e.target.value); dateStartFilter = `${selectedYear}-01-01`; dateEndFilter = `${selectedYear}-12-31`; document.getElementById('filter-start').value = dateStartFilter; document.getElementById('filter-end').value = dateEndFilter; updateDateOverlay('filter-start', 'start-overlay'); updateDateOverlay('filter-end', 'end-overlay'); currentPage = 1; updateUI(); });
 
         // จัดการบันทึกหรืออัปเดตรายการในตาราง s2_records
         document.getElementById('finance-form').addEventListener('submit', async function(e) {
@@ -752,6 +827,12 @@
 
         checkAuthState();
         window.resetFormMode();
+        
+        // บังคับประมวลผลหน้ากาก Overlay ปฏิทินตัวกรองช่วงเริ่มต้นระบบครั้งแรก
+        setTimeout(() => {
+            updateDateOverlay('filter-start', 'start-overlay');
+            updateDateOverlay('filter-end', 'end-overlay');
+        }, 800);
     </script>
 </body>
 </html>
