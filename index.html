@@ -204,7 +204,6 @@
     </main>
 
     <script>
-        // ใส่ค่า API ที่คุณปิงส่งมาให้เรียบร้อยแล้วครับ 🌟
         const SUPABASE_URL = "https://siinyeuyvzzhstjzcwdo.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg"; 
 
@@ -277,7 +276,7 @@
             try {
                 const { error } = await _supabase.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: window.location.origin + window.location.pathname }
+                    options: { redirectTo: 'https://aminipig.github.io/s2-laundry/' }
                 });
                 if (error) throw error;
             } catch (error) {
@@ -296,10 +295,10 @@
             }
         });
 
-        // ดึงข้อมูลครั้งแรก
+        // ดึงข้อมูลครั้งแรกจากตาราง s2_records 🌟
         async function fetchInitialData() {
             document.getElementById('page-info').innerText = "🔄 กำลังโหลดข้อมูลจาก Supabase...";
-            const { data, error } = await _supabase.from('salon_records').select('*');
+            const { data, error } = await _supabase.from('s2_records').select('*');
             
             if (error) {
                 console.error("Error fetching data:", error.message);
@@ -309,10 +308,10 @@
             processIncomingData(data);
         }
 
-        // เริ่มต้นการซิงค์ข้อมูล Realtime
+        // เริ่มต้นการซิงค์ข้อมูล Realtime ตาราง s2_records 🌟
         function startSyncData() {
-            realtimeChannel = _supabase.channel('public:salon_records')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'salon_records' }, () => {
+            realtimeChannel = _supabase.channel('public:s2_records')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 's2_records' }, () => {
                     fetchInitialData(); 
                 })
                 .subscribe();
@@ -568,146 +567,6 @@
             document.getElementById('date').value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
         }
 
+        // จัดการลบรายการในตาราง s2_records 🌟
         window.deleteTransaction = async function(id) {
-            const item = window.transactions.find(t => t.id === id);
-            if (!item) return;
-            if (confirm(`คุณปิงแน่ใจนะครับ ว่าต้องการลบรายการ "${item.description}"?`)) {
-                try {
-                    const { error } = await _supabase.from('salon_records').delete().eq('id', id);
-                    if (error) throw error;
-                    await writeActivityLog("ลบรายการ", `ลบรายการ: "${item.description}" ยอด ${parseFloat(item.amount).toFixed(2)} บ.`);
-                    if (document.getElementById('edit-id').value === id) { window.resetFormMode(); }
-                } catch (e) { alert("ลบข้อมูลไม่สำเร็จ: " + e.message); }
-            }
-        }
-
-        function updateChart(incomeData, expenseData) {
-            const ctx = document.getElementById('financeChart').getContext('2d');
-            if (financeChart) { financeChart.destroy(); }
-            financeChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-                    datasets: [
-                        { label: 'รายรับ', data: incomeData, backgroundColor: '#10B981', borderRadius: 6 },
-                        { label: 'รายจ่าย', data: expenseData, backgroundColor: '#F43F5E', borderRadius: 6 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
-        }
-
-        document.getElementById('filter-start').addEventListener('change', () => { currentPage = 1; dateStartFilter = document.getElementById('filter-start').value; applySortAndRender(); });
-        document.getElementById('filter-end').addEventListener('change', () => { currentPage = 1; dateEndFilter = document.getElementById('filter-end').value; applySortAndRender(); });
-        document.getElementById('btn-clear-date').addEventListener('click', () => { document.getElementById('filter-start').value = ''; document.getElementById('filter-end').value = ''; dateStartFilter = ''; dateEndFilter = ''; currentPage = 1; applySortAndRender(); });
-        document.getElementById('search-input').addEventListener('input', (e) => { searchQuery = e.target.value; currentPage = 1; applySortAndRender(); });
-        document.getElementById('btn-cancel-edit').addEventListener('click', () => window.resetFormMode());
-        document.getElementById('type-filter').addEventListener('change', (e) => { selectedTypeFilter = e.target.value; currentPage = 1; applySortAndRender(); });
-        document.getElementById('th-date').addEventListener('click', () => { currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc'; currentSortKey = 'date'; applySortAndRender(); });
-        document.getElementById('th-amount').addEventListener('click', () => { currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc'; currentSortKey = 'amount'; applySortAndRender(); });
-        document.getElementById('per-page').addEventListener('change', (e) => { itemsPerPage = e.target.value; currentPage = 1; renderTable(); });
-        document.getElementById('btn-prev').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTable(); } });
-        document.getElementById('btn-next').addEventListener('click', () => { if (currentPage < Math.ceil(sortedRecords.length / parseInt(itemsPerPage))) { currentPage++; renderTable(); } });
-        document.getElementById('year-filter').addEventListener('change', (e) => { selectedYear = parseInt(e.target.value); dateStartFilter = `${selectedYear}-01-01`; dateEndFilter = `${selectedYear}-12-31`; document.getElementById('filter-start').value = dateStartFilter; document.getElementById('filter-end').value = dateEndFilter; currentPage = 1; updateUI(); });
-
-        document.getElementById('finance-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const editId = document.getElementById('edit-id').value;
-            const itemType = document.getElementById('type').value;
-            
-            const inputDateValue = document.getElementById('date').value; 
-            const nowTime = new Date();
-            const pad = (num) => String(num).padStart(2, '0');
-            const timeString = `${pad(nowTime.getHours())}:${pad(nowTime.getMinutes())}:${pad(nowTime.getSeconds())}`;
-            const fullDateTimeStampString = `${inputDateValue} ${timeString}`;
-
-            const payload = {
-                date: fullDateTimeStampString, 
-                type: itemType,
-                description: document.getElementById('description').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                notes: document.getElementById('notes').value,
-                paymentMethod: document.getElementById('payment-method').value
-            };
-
-            try {
-                if (editId) {
-                    const existingItem = window.transactions.find(t => t.id === editId);
-                    if (existingItem && existingItem.date.substring(0,10) === inputDateValue) {
-                        payload.date = existingItem.date; 
-                    }
-                    const { error } = await _supabase.from('salon_records').update(payload).eq('id', editId);
-                    if (error) throw error;
-                    await writeActivityLog("แก้ไขรายการ", `แก้ไขเป็น: "${payload.description}" ยอด ${payload.amount.toFixed(2)} บ. (${payload.paymentMethod})`);
-                } else {
-                    const { error } = await _supabase.from('salon_records').insert([payload]);
-                    if (error) throw error;
-                    await writeActivityLog("สร้างรายการใหม่", `เพิ่มรายการ: "${payload.description}" ยอด ${payload.amount.toFixed(2)} บ. (${payload.paymentMethod})`);
-                }
-                window.resetFormMode();
-            } catch (error) { alert("บันทึกข้อมูลล้มเหลว: " + error.message); }
-        });
-
-        document.getElementById('btn-export').addEventListener('click', async function() {
-            const start = document.getElementById('filter-start').value;
-            const end = document.getElementById('filter-end').value;
-            if (!start || !end) { alert('กรุณาเลือกช่วงวันที่ก่อนส่งออก Excel ครับ'); return; }
-            if (sortedRecords.length === 0) { alert('ไม่พบข้อมูลในช่วงเวลาดังกล่าว'); return; }
-
-            let chronologicalRecords = [...sortedRecords];
-
-            const headers = ['วัน เดือน ปี', 'รายการ', 'ช่องทางชำระเงิน', 'รายรับ (บาท)', 'รายจ่าย (บาท)', 'คงเหลือ (บาท)', 'หมายเหตุ'];
-            const dataRows = [];
-            let currentBalance = 0, sumIncome = 0, sumExpense = 0;
-            const thaiShortMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-
-            let exportedItemsSummary = [];
-
-            chronologicalRecords.forEach((t) => {
-                const isIncome = t.type === 'income';
-                const amt = parseFloat(t.amount);
-                if (isIncome) { currentBalance += amt; sumIncome += amt; } 
-                else { currentBalance -= amt; sumExpense += amt; }
-                
-                const dateObj = new Date(t.date.substring(0, 10));
-                const formattedDate = `${dateObj.getDate()} ${thaiShortMonths[dateObj.getMonth()]} ${dateObj.getFullYear() + 543}`;
-                
-                const methodStr = t.paymentMethod || "เงินโอน";
-                
-                dataRows.push([formattedDate, t.description, methodStr, isIncome ? amt : "", !isIncome ? amt : "", currentBalance, t.notes || "-"]);
-                exportedItemsSummary.push(`[${t.date}] ${t.description} (${methodStr}) (${isIncome?'รายรับ':'รายจ่าย'}: ${amt} บ.)`);
-            });
-
-            const summaryStart = dataRows.length + 1;
-            dataRows.push(["", "", "", "", "", "", ""], 
-                          ['สรุปยอดงวดนี้', 'รวมรายรับทั้งหมด', "", sumIncome, "", "", ""],
-                          ["", 'รวมรายจ่ายทั้งหมด', "", "", sumExpense, "", ""],
-                          ["", 'ยอดดุลคงเหลือสุทธิ', "", "", "", sumIncome - sumExpense, (sumIncome - sumExpense >= 0) ? 'งวดนี้มีกำไร' : 'งวดนี้ขาดทุน']);
-
-            const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
-            const range = XLSX.utils.decode_range(worksheet['!ref']);
-            for (let R = range.s.r; R <= range.e.r; ++R) {
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const addr = XLSX.utils.encode_cell({c:C, r:R});
-                    if (!worksheet[addr]) continue;
-                    worksheet[addr].s = { font: { name: "Aptos", size: 16, bold: R === 0 || R > summaryStart } };
-                    if (R === 0) worksheet[addr].s.fill = { fgColor: { rgb: "F3F4F6" } };
-                    if (R > 0 && (C === 3 || C === 4 || C === 5) && typeof worksheet[addr].v === 'number') worksheet[addr].z = '#,##0.00';
-                }
-            }
-            worksheet['!cols'] = [{ wch: 18 }, { wch: 35 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 30 }];
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "สมุดเงินสด");
-            
-            const logDetails = `เงื่อนไขช่วงวันที่: ${start} ถึง ${end} | จำนวนทั้งหมด: ${chronologicalRecords.length} รายการ | รายการส่งออก: ${exportedItemsSummary.join(", ")}`;
-            await writeActivityLog("ส่งออก Excel", logDetails);
-
-            XLSX.writeFile(workbook, `สมุดเงินสดร้านS2ซักอบรีด_${start}_ถึง_${end}.xlsx`);
-        });
-
-        // เปิดรันระบบเช็ค Session ล็อกอินทันทีเมื่อเปิดเว็บ
-        checkAuthState();
-        document.getElementById('date').value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-    </script>
-</body>
-</html>
+            const item = window.transactions.find(t => t.
