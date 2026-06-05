@@ -277,7 +277,7 @@
             try {
                 const { error } = await _supabase.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: 'https://aminipig.github.io/s2-laundry/' }
+                    options: { redirectTo: window.location.origin + window.location.pathname }
                 });
                 if (error) throw error;
             } catch (error) {
