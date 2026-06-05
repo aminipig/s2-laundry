@@ -706,8 +706,8 @@
             XLSX.writeFile(workbook, `สมุดเงินสดร้านS2ซักอบรีด_${start}_ถึง_${end}.xlsx`);
         });
 
+        // เปิดรันตรวจสอบสิทธิ์เข้าใช้งานทันทีเมื่อโหลดหน้าเว็บ
         checkAuthState();
-        document.getElementById('date').value = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     </script>
 </body>
 </html>
