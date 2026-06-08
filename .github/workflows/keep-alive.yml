@@ -1,0 +1,17 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # รันทุกวันจันทร์ เวลา 7 โมงเช้าเวลาไทย (00:00 UTC)
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # ทำให้เรากดสั่งรันเองจากหน้าเว็บ GitHub ได้ด้วย
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase API
+        run: |
+          curl -X GET "https://siinyeuyvzzhstjzcwdo.supabase.co/rest/v1/" \
+          -H "apikey: sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg" \
+          -H "Authorization: Bearer sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg"
