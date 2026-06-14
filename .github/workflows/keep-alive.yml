@@ -10,8 +10,14 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase API
+      - name: Ping Supabase API 1 (s2-laundry)
         run: |
           curl -X GET "https://siinyeuyvzzhstjzcwdo.supabase.co/rest/v1/" \
           -H "apikey: sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg" \
           -H "Authorization: Bearer sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg"
+
+      - name: Ping Supabase API 2 (Nkhanthong-dorm)
+        run: |
+          curl -X GET "https://acwldqgljculglalqikp.supabase.co/rest/v1/users?select=*&limit=1" \
+          -H "apikey: sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k" \
+          -H "Authorization: Bearer sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k"
