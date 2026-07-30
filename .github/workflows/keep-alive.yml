@@ -21,3 +21,9 @@ jobs:
           curl -X GET "https://acwldqgljculglalqikp.supabase.co/rest/v1/rooms?select=*&limit=1" \
           -H "apikey: sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k" \
           -H "Authorization: Bearer sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k"
+
+      - name: Ping Supabase API 3 (salon-accounting)
+        run: |
+          curl -X GET "https://kvusfpielbyxgdrlpowd.supabase.co/rest/v1/bookings?select=*&limit=1" \
+          -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dXNmcGllbGJ5eGdkcmxwb3dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNjY2MTAsImV4cCI6MjEwMDk0MjYxMH0.Jm2oFPBGgoSt7C0C8q8_HggD2_Jm7JfHX1sdj1LDzTQ" \
+          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dXNmcGllbGJ5eGdkcmxwb3dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNjY2MTAsImV4cCI6MjEwMDk0MjYxMH0.Jm2oFPBGgoSt7C0C8q8_HggD2_Jm7JfHX1sdj1LDzTQ"
