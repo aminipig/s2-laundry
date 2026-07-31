@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # ==========================================
-      # Project 1: s2-laundry
+      # Project 1: s2-laundry (Updated URL & Key)
       # ==========================================
       - name: Random Delay before Project 1
         run: |
@@ -21,15 +21,15 @@ jobs:
 
       - name: Ping DB - s2-laundry
         run: |
-          curl -X GET "https://siinyeuyvzzhstjzcwdo.supabase.co/rest/v1/s2_records?select=*&limit=1" \
-          -H "apikey: sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg" \
-          -H "Authorization: Bearer sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg" \
+          curl -X GET "https://kcrtbxecjcjytnlxgzcv.supabase.co/rest/v1/s2_records?select=*&limit=1" \
+          -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU" \
+          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU" \
           -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
       - name: Ping Auth Health - s2-laundry
         run: |
-          curl -X GET "https://siinyeuyvzzhstjzcwdo.supabase.co/auth/v1/health" \
-          -H "apikey: sb_publishable_GWMnCCLeCC36JkbneN0orA_Jffu2Fxg"
+          curl -X GET "https://kcrtbxecjcjytnlxgzcv.supabase.co/auth/v1/health" \
+          -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU"
 
       # ==========================================
       # Project 2: Nkhanthong-dorm
