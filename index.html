@@ -590,7 +590,7 @@
             document.getElementById('date').value = `${year}-${month}-${day}`;
         }
 
-        // 🌟 ฟังก์ชันลบรายการพร้อม Log ระบุประเภท รายรับ/รายจ่าย ชัดเจน
+        // 🌟 ฟังก์ชันลบรายการ (action = "ลบรายการ")
         window.deleteTransaction = async function(id) {
             const item = window.transactions.find(t => t.id === id);
             if (!item) return;
@@ -603,7 +603,7 @@
                     if (error) throw error;
 
                     await writeActivityLog(
-                        `ลบรายการ${typeLabel}`, 
+                        "ลบรายการ", 
                         `ลบรายการ [${typeLabel}]: "${item.description}" ยอด ${parseFloat(item.amount).toFixed(2)} บ.`
                     );
 
@@ -685,7 +685,7 @@
         document.getElementById('btn-next').addEventListener('click', () => { if (currentPage < Math.ceil(sortedRecords.length / parseInt(itemsPerPage))) { currentPage++; renderTable(); } });
         document.getElementById('year-filter').addEventListener('change', (e) => { selectedYear = parseInt(e.target.value); dateStartFilter = `${selectedYear}-01-01`; dateEndFilter = `${selectedYear}-12-31`; document.getElementById('filter-start').value = dateStartFilter; document.getElementById('filter-end').value = dateEndFilter; currentPage = 1; updateUI(); });
 
-        // 🌟 ฟังก์ชันส่งฟอร์ม บันทึก/แก้ไข รายการพร้อม Log ระบุประเภท รายรับ/รายจ่าย ชัดเจน
+        // 🌟 ฟังก์ชันส่งฟอร์ม บันทึก/แก้ไข (action = "สร้างรายการใหม่" / "แก้ไขรายการ")
         document.getElementById('finance-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const editId = document.getElementById('edit-id').value;
@@ -719,7 +719,7 @@
                     if (error) throw error;
 
                     await writeActivityLog(
-                        `แก้ไขรายการ${typeLabel}`, 
+                        "แก้ไขรายการ", 
                         `แก้ไขรายการเป็น [${typeLabel}]: "${payload.description}" ยอด ${payload.amount.toFixed(2)} บ. (${payload.paymentMethod})`
                     );
                 } else {
@@ -727,7 +727,7 @@
                     if (error) throw error;
 
                     await writeActivityLog(
-                        `เพิ่มรายการ${typeLabel}`, 
+                        "สร้างรายการใหม่", 
                         `เพิ่มรายการใหม่ [${typeLabel}]: "${payload.description}" ยอด ${payload.amount.toFixed(2)} บ. (${payload.paymentMethod})`
                     );
                 }
