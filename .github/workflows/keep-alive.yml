@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # ==========================================
-      # Project 1: s2-laundry (Updated URL & Key)
+      # Project 1: s2-laundry
       # ==========================================
       - name: Random Delay before Project 1
         run: |
@@ -32,7 +32,7 @@ jobs:
           -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU"
 
       # ==========================================
-      # Project 2: Nkhanthong-dorm
+      # Project 2: Nkhanthong-dorm (Fixed URL)
       # ==========================================
       - name: Random Delay before Project 2
         run: |
@@ -49,7 +49,7 @@ jobs:
 
       - name: Ping Auth Health - Nkhanthong-dorm
         run: |
-          curl -X GET "https://acwldqgljculglalqikp.supabase.co/rest/v1/health" \
+          curl -X GET "https://acwldqgljculglalqikp.supabase.co/auth/v1/health" \
           -H "apikey: sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k"
 
       # ==========================================
