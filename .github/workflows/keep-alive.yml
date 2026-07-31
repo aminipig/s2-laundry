@@ -32,7 +32,7 @@ jobs:
           -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU"
 
       # ==========================================
-      # Project 2: Nkhanthong-dorm (Fixed URL)
+      # Project 2: Nkhanthong-dorm
       # ==========================================
       - name: Random Delay before Project 2
         run: |
