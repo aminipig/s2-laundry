@@ -2,8 +2,8 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    # รันทุกวันจันทร์ วันพุธ และวันศุกร์ เวลา 7 โมงเช้าเวลาไทย (00:00 UTC)
-    - cron: '0 0 * * 1,3,5'
+    # รันทุกวันจันทร์ วันพุธ และวันศุกร์ เริ่มต้นกระบวนการตอน 06:00 น. เวลาไทย (23:00 UTC)
+    - cron: '0 23 * * 0,2,4'
   workflow_dispatch: # ทำให้เรากดสั่งรันเองจากหน้าเว็บ GitHub ได้ด้วย
 
 jobs:
@@ -13,6 +13,12 @@ jobs:
       # ==========================================
       # Project 1: s2-laundry
       # ==========================================
+      - name: Random Delay before Project 1
+        run: |
+          DELAY=$((RANDOM % 1800 + 1)) # สุ่มเวลา 1 ถึง 30 นาที (1800 วินาที)
+          echo "Waiting for $DELAY seconds before pinging Project 1..."
+          sleep $DELAY
+
       - name: Ping DB - s2-laundry
         run: |
           curl -X GET "https://siinyeuyvzzhstjzcwdo.supabase.co/rest/v1/s2_records?select=*&limit=1" \
@@ -28,6 +34,12 @@ jobs:
       # ==========================================
       # Project 2: Nkhanthong-dorm
       # ==========================================
+      - name: Random Delay before Project 2
+        run: |
+          DELAY=$((RANDOM % 900 + 300)) # สุ่มเวลาเว้นระยะห่าง 5 ถึง 20 นาที
+          echo "Waiting for $DELAY seconds before pinging Project 2..."
+          sleep $DELAY
+
       - name: Ping DB - Nkhanthong-dorm
         run: |
           curl -X GET "https://acwldqgljculglalqikp.supabase.co/rest/v1/rooms?select=*&limit=1" \
@@ -43,6 +55,12 @@ jobs:
       # ==========================================
       # Project 3: salon-accounting
       # ==========================================
+      - name: Random Delay before Project 3
+        run: |
+          DELAY=$((RANDOM % 900 + 300)) # สุ่มเวลาเว้นระยะห่าง 5 ถึง 20 นาที
+          echo "Waiting for $DELAY seconds before pinging Project 3..."
+          sleep $DELAY
+
       - name: Ping DB - salon-accounting
         run: |
           curl -X GET "https://kvusfpielbyxgdrlpowd.supabase.co/rest/v1/bookings?select=*&limit=1" \
