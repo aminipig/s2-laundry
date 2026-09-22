@@ -1,0 +1,31 @@
+name: Daily Stock Update to Telegram
+
+on:
+  schedule:
+    # 02:00 UTC = 09:00 AM (UTC+7) ทุกวันจันทร์-ศุกร์ (1-5)
+    - cron: '0 2 * * 1-5'
+  workflow_dispatch: # สำหรับกดทดสอบด้วยตนเองได้ตลอดเวลา
+
+jobs:
+  run-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run script
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python main.py
