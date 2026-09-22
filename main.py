@@ -4,9 +4,12 @@ import yfinance as yf
 import feedparser
 from datetime import datetime, timezone, timedelta
 
-# ดึงจาก Environment Variables ก่อน หากไม่มีให้ใช้ค่าที่ระบุไว้
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8657492454:AAG29VOWiEgmw2Lt7IoB8FtPd7QFq24GV3w")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "8479818984")
+# แก้ไขเป็นแบบนี้ เพื่อให้ใช้ค่าสำรองทันทีหาก Secret ว่างเปล่า
+TELEGRAM_BOT_TOKEN = (
+    os.environ.get("TELEGRAM_BOT_TOKEN")
+    or "8657492454:AAG29VOWiEgmw2Lt7IoB8FtPd7QFq24GV3w"
+)
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "8479818984"
 
 # รายชื่อหุ้นที่สนใจ (ปรับเพิ่ม/ลด Ticker ได้ตามต้องการ)
 WATCHLIST = {
