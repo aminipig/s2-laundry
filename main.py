@@ -121,6 +121,7 @@ def main():
     message += get_market_summary()
     message += get_watchlist_summary()
     message += get_daily_news()
+    message += get_tradingview_news()  # <-- เพิ่มข่าวจาก TradingView ตรงนี้
     
     # เพิ่มส่วนของวันจันทร์
     if is_monday:
