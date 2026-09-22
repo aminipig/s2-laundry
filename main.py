@@ -4,14 +4,12 @@ import yfinance as yf
 import feedparser
 from datetime import datetime, timezone, timedelta
 
-# แก้ไขเป็นแบบนี้ เพื่อให้ใช้ค่าสำรองทันทีหาก Secret ว่างเปล่า
 TELEGRAM_BOT_TOKEN = (
     os.environ.get("TELEGRAM_BOT_TOKEN")
     or "8657492454:AAG29VOWiEgmw2Lt7IoB8FtPd7QFq24GV3w"
 )
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "8479818984"
 
-# รายชื่อหุ้นที่สนใจ (ปรับเพิ่ม/ลด Ticker ได้ตามต้องการ)
 WATCHLIST = {
     "สหรัฐฯ": ["PLTR", "AMD", "NVDA"],
     "ไทย": ["DELTA.BK", "PTT.BK"]
@@ -22,7 +20,7 @@ def get_thai_datetime():
     return datetime.now(tz_thai)
 
 def get_market_summary():
-    """ดึงภาพรวมดัชนีหลัก"""
+    """ดึงภาพรวมดัชนีหลัก (ใช้ 5d เพื่อความแม่นยำช่วงเช้า/หลังวันหยุด)"""
     tickers = {
         "S&P 500": "^GSPC",
         "Nasdaq": "^IXIC",
@@ -34,7 +32,7 @@ def get_market_summary():
     for name, symbol in tickers.items():
         try:
             ticker = yf.Ticker(symbol)
-            hist = ticker.history(period="2d")
+            hist = ticker.history(period="5d")
             if len(hist) >= 2:
                 prev_close = hist["Close"].iloc[-2]
                 curr_close = hist["Close"].iloc[-1]
@@ -57,10 +55,11 @@ def get_watchlist_summary():
         for sym in symbols:
             try:
                 t = yf.Ticker(sym)
-                h = t.history(period="2d")
+                h = t.history(period="5d")
                 if len(h) >= 2:
                     curr = h["Close"].iloc[-1]
-                    pct = ((curr - h["Close"].iloc[-2]) / h["Close"].iloc[-2]) * 100
+                    prev = h["Close"].iloc[-2]
+                    pct = ((curr - prev) / prev) * 100
                     icon = "🟢" if pct >= 0 else "🔴"
                     display_name = sym.replace(".BK", "")
                     text += f"{icon} {display_name}: {curr:,.2f} ({pct:+.2f}%)\n"
@@ -69,59 +68,63 @@ def get_watchlist_summary():
     return text
 
 def get_daily_news():
-    """ดึงข่าวเด่นรอบ 24 ชั่วโมงจาก Google News"""
+    """ดึงข่าวเด่นรอบ 24 ชั่วโมง (คัดกรองเฉพาะข่าวเนื้อหา ไม่เอาชื่อคอลัมน์)"""
     text = "\n📰 พาดหัวข่าวสำคัญรอบ 24 ชม.\n"
     feeds = [
         ("สหรัฐฯ", "https://news.google.com/rss/search?q=stock+market+when:24h&hl=en-US&gl=US&ceid=US:en"),
-        ("ไทย", "https://news.google.com/rss/search?q=ข่าวหุ้น+when:24h&hl=th&gl=TH&ceid=TH:th")
+        ("ไทย", "https://news.google.com/rss/search?q=(ตลาดหุ้นไทย+OR+ดัชนีหุ้นไทย+OR+SET50)+when:24h&hl=th&gl=TH&ceid=TH:th")
     ]
     for category, url in feeds:
         text += f"\n• ข่าวหุ้น{category}:\n"
         try:
             feed = feedparser.parse(url)
-            for entry in feed.entries[:3]:
-                title = entry.title.split(" - ")[0]
-                text += f"  - {title}\n"
+            count = 0
+            for entry in feed.entries:
+                title = entry.title.split(" - ")[0].strip()
+                # กรองไม่เอาหัวข้อสั้นๆ ที่เป็นชื่อคอลัมน์
+                if len(title) > 20 and count < 3:
+                    text += f"  - {title}\n"
+                    count += 1
+            if count == 0:
+                text += "  - ติดตามความเคลื่อนไหวก่อนเปิดตลาด\n"
         except Exception:
             text += "  - ดึงข้อมูลไม่สำเร็จ\n"
     return text
 
 def get_tradingview_news():
-    """ดึงพาดหัวข่าวเด่นจาก TradingView"""
+    """ดึงข่าวและบทวิเคราะห์จาก TradingView ผ่าน Feed ที่ไม่โดน Cloudflare บล็อก"""
     text = "\n📈 ข่าวเด่นจาก TradingView\n"
-    url = "https://news-headlines.tradingview.com/v2/headlines?category=stock&lang=en"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-    }
+    url = "https://news.google.com/rss/search?q=site:tradingview.com/news+when:24h&hl=en-US&gl=US&ceid=US:en"
+    
     try:
-        res = requests.get(url, headers=headers, timeout=10)
-        if res.status_code == 200:
-            data = res.json()
-            items = data.get("items", [])[:4]
-            for item in items:
-                title = item.get("title")
-                provider = item.get("provider", "TradingView")
-                text += f"• [{provider}] {title}\n"
+        feed = feedparser.parse(url)
+        items = feed.entries[:3]
+        if items:
+            for entry in items:
+                title = entry.title.split(" - ")[0].strip()
+                text += f"• {title}\n"
         else:
-            text += "▫️ ไม่สามารถดึงข่าว TradingView ได้ในขณะนี้\n"
+            # Fallback หากรอบ 24 ชม. ข่าวของ TradingView ยังไม่อัปเดต
+            text += "• ติดตามความเคลื่อนไหวด้านเทคนิคและกราฟราคาบน TradingView\n"
     except Exception:
-        text += "▫️ เกิดข้อผิดพลาดในการเชื่อมต่อ TradingView\n"
+        text += "▫️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n"
+        
     return text
 
 def get_upcoming_14d_events():
-    """ดึงปัจจัยและปฏิทินเศรษฐกิจล่วงหน้า 14 วัน (สำหรับวันจันทร์)"""
+    """ดึงปัจจัยล่วงหน้า 14 วัน (สำหรับวันจันทร์)"""
     text = "\n📅 ไฮไลต์ปฏิทินเศรษฐกิจ & ปัจจัยล่วงหน้า 14 วัน\n"
-    url = "https://news.google.com/rss/search?q=economic+calendar+OR+FOMC+OR+CPI+OR+earnings+preview+when:7d&hl=en-US&gl=US&ceid=US:en"
+    url = "https://news.google.com/rss/search?q=economic+calendar+OR+FOMC+OR+CPI+when:7d&hl=en-US&gl=US&ceid=US:en"
     try:
         feed = feedparser.parse(url)
         if feed.entries:
             for entry in feed.entries[:4]:
-                title = entry.title.split(" - ")[0]
+                title = entry.title.split(" - ")[0].strip()
                 text += f"📌 {title}\n"
         else:
             text += "▫️ ติดตามตัวเลขเศรษฐกิจสำคัญประจำสัปดาห์\n"
     except Exception:
-        text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูลปฏิทินเศรษฐกิจ\n"
+        text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n"
     return text
 
 def send_telegram_message(message):
