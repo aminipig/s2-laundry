@@ -130,3 +130,28 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def get_tradingview_news():
+    """ดึงพาดหัวข่าวเด่นจาก TradingView (หุ้น / ภาพรวมตลาด)"""
+    text = "\n📈 **ข่าวเด่นจาก TradingView**\n"
+    url = "https://news-headlines.tradingview.com/v2/headlines?category=stock&lang=en"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            items = data.get("items", [])[:4] # ดึง 4 ข่าวล่าสุด
+            for item in items:
+                title = item.get("title")
+                provider = item.get("provider", "TradingView")
+                text += f"• [{provider}] {title}\n"
+        else:
+            text += "▫️ ไม่สามารถเข้าถึงข่าว TradingView ได้ในขณะนี้\n"
+    except Exception:
+        text += "▫️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n"
+        
+    return text
