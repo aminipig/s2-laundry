@@ -2,8 +2,8 @@ name: Daily Stock Update to Telegram
 
 on:
   schedule:
-    # 02:00 UTC = 09:00 AM (UTC+7) ทุกวันจันทร์-ศุกร์ (1-5)
-    - cron: '0 2 * * 1-5'
+    # 02:05 UTC = 09:05 AM (UTC+7) ทุกวันจันทร์-ศุกร์
+    - cron: '5 2 * * 1-5'
   workflow_dispatch: # สำหรับกดทดสอบด้วยตนเองได้ตลอดเวลา
 
 jobs:
