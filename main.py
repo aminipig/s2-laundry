@@ -21,7 +21,7 @@ def get_thai_datetime():
     return datetime.now(tz_thai)
 
 def translate_to_thai(text):
-    """แปลข้อความภาษาอังกฤษเป็นภาษาไทยผ่าน Google Translate API แบบฟรี"""
+    """แปลข้อความภาษาอังกฤษเป็นภาษาไทย"""
     if not text:
         return ""
     try:
@@ -42,24 +42,28 @@ def translate_to_thai(text):
         pass
     return text
 
-def get_set_index_google_finance():
-    """ดึงข้อมูล SET Index จาก Google Finance โดยตรง"""
-    url = "https://www.google.com/finance/quote/SET:INDEXBKK"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-    }
+def get_set_index():
+    """ดึง SET Index จาก TradingView Scanner API (แม่นยำ ไม่ติดหน้า Consent)"""
     try:
-        res = requests.get(url, headers=headers, timeout=10)
+        url = "https://scanner.tradingview.com/thailand/scan"
+        payload = {
+            "symbols": {"tickers": ["SET:SET"]},
+            "columns": ["close", "change", "change_abs"]
+        }
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        }
+        res = requests.post(url, json=payload, headers=headers, timeout=10)
         if res.status_code == 200:
-            soup = BeautifulSoup(res.text, "html.parser")
-            price_div = soup.find("div", class_="YMlKec fxKbKc")
-            change_div = soup.find("div", class_="JwB6zf")
-            
-            if price_div:
-                price = price_div.text.strip()
-                chg = change_div.text.strip() if change_div else ""
-                icon = "🔴" if "-" in chg else "🟢"
-                return f"{icon} SET Index: {price} ({chg})\n"
+            data = res.json()
+            items = data.get("data", [])
+            if items:
+                row = items[0].get("d", [])
+                close_price = row[0]
+                pct_chg = row
+                abs_chg = row
+                icon = "🟢" if pct_chg >= 0 else "🔴"
+                return f"{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
     except Exception:
         pass
     return "▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
@@ -76,10 +80,11 @@ def get_market_summary():
     for name, symbol in us_tickers.items():
         try:
             ticker = yf.Ticker(symbol)
-            hist = ticker.history(period="5d")
-            if len(hist) >= 2:
-                prev_close = hist["Close"].iloc[-2]
-                curr_close = hist["Close"].iloc[-1]
+            h = ticker.history(period="5d").dropna(subset=["Close"])
+            closes = [c for c in h["Close"].tolist() if str(c) != "nan" and c > 0]
+            if len(closes) >= 2:
+                prev_close = closes[-2]
+                curr_close = closes[-1]
                 chg = curr_close - prev_close
                 pct_chg = (chg / prev_close) * 100
                 icon = "🟢" if chg >= 0 else "🔴"
@@ -89,22 +94,36 @@ def get_market_summary():
         except Exception:
             text += f"▫️ {name}: ดึงข้อมูลไม่สำเร็จ\n"
             
-    # เพิ่ม SET Index จาก Google Finance
-    text += get_set_index_google_finance()
+    # เพิ่ม SET Index
+    text += get_set_index()
     return text
 
 def get_watchlist_summary():
-    """ดึงข้อมูลหุ้นรายตัวที่น่าสนใจ"""
+    """ดึงข้อมูลหุ้นรายตัวที่น่าสนใจ (แก้ปัญหาค่า nan)"""
     text = "\n🎯 หุ้นเด่นที่น่าจับตา\n"
     for market, symbols in WATCHLIST.items():
         text += f"[{market}]\n"
         for sym in symbols:
             try:
                 t = yf.Ticker(sym)
-                h = t.history(period="5d")
-                if len(h) >= 2:
-                    curr = h["Close"].iloc[-1]
-                    prev = h["Close"].iloc[-2]
+                curr, prev = None, None
+                
+                # วิธีที่ 1: ดึงจาก fast_info
+                try:
+                    curr = t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
+                    prev = t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
+                except Exception:
+                    pass
+                
+                # วิธีที่ 2 (สำรอง): กรอง NaN ออกจาก History
+                if curr is None or prev is None or str(curr) == "nan":
+                    h = t.history(period="1mo").dropna(subset=["Close"])
+                    closes = [c for c in h["Close"].tolist() if str(c) != "nan" and c > 0]
+                    if len(closes) >= 2:
+                        curr = closes[-1]
+                        prev = closes[-2]
+                
+                if curr is not None and prev is not None and str(curr) != "nan":
                     pct = ((curr - prev) / prev) * 100
                     icon = "🟢" if pct >= 0 else "🔴"
                     display_name = sym.replace(".BK", "")
