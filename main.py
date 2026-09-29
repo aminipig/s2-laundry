@@ -11,17 +11,16 @@ TELEGRAM_BOT_TOKEN = (
 )
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "8479818984"
 
-WATCHLIST = {
-    "สหรัฐฯ": ["PLTR", "AMD", "NVDA"],
-    "ไทย": ["DELTA.BK", "PTT.BK"]
-}
+# รายชื่อหุ้นที่ติดตาม
+WATCHLIST_THAI = ["DELTA.BK", "PTT.BK"]
+WATCHLIST_US = ["PLTR", "AMD", "NVDA"]
 
 def get_thai_datetime():
     tz_thai = timezone(timedelta(hours=7))
     return datetime.now(tz_thai)
 
 def clean_text(raw_html):
-    """ล้างแท็ก HTML และตัดช่องว่างส่วนเกินออกจากเนื้อหาข่าว"""
+    """ล้างแท็ก HTML ออกจากข้อความข่าว"""
     if not raw_html:
         return ""
     soup = BeautifulSoup(raw_html, "html.parser")
@@ -50,42 +49,110 @@ def translate_to_thai(text):
         pass
     return text
 
-def get_set_index():
+# ==================== ส่วนข้อมูลตลาดหุ้นไทย (09:00 น.) ====================
+
+def get_thai_market_summary():
     """ดึง SET Index จาก TradingView Scanner API"""
+    text = "📊 สรุปดัชนีตลาดหุ้นไทย\n"
     try:
         url = "https://scanner.tradingview.com/thailand/scan"
         payload = {
             "symbols": {"tickers": ["SET:SET"]},
             "columns": ["close", "change", "change_abs"]
         }
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        }
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         res = requests.post(url, json=payload, headers=headers, timeout=10)
         if res.status_code == 200:
-            data = res.json()
-            items = data.get("data", [])
+            items = res.json().get("data", [])
             if items:
                 row = items[0].get("d", [])
                 close_price = row[0]
                 pct_chg = row
                 abs_chg = row
                 icon = "🟢" if pct_chg >= 0 else "🔴"
-                return f"{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
+                text += f"{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
+                return text
     except Exception:
         pass
-    return "▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
+    text += "▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
+    return text
 
-def get_market_summary():
-    """ดึงภาพรวมดัชนีหลัก"""
-    us_tickers = {
-        "S&P 500": "^GSPC",
-        "Nasdaq": "^IXIC",
-        "Dow Jones": "^DJI"
-    }
-    
-    text = "📊 สรุปภาพรวมดัชนีตลาด\n"
-    for name, symbol in us_tickers.items():
+def get_thai_watchlist():
+    """ดึงราคาหุ้นไทยเด่น"""
+    text = "\n🎯 หุ้นไทยเด่นที่น่าจับตา\n"
+    for sym in WATCHLIST_THAI:
+        try:
+            t = yf.Ticker(sym)
+            curr, prev = None, None
+            try:
+                curr = t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
+                prev = t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
+            except Exception:
+                pass
+            if curr is None or prev is None or str(curr) == "nan":
+                h = t.history(period="1mo").dropna(subset=["Close"])
+                closes = [c for c in h["Close"].tolist() if str(c) != "nan" and c > 0]
+                if len(closes) >= 2:
+                    curr, prev = closes[-1], closes[-2]
+            if curr is not None and prev is not None and str(curr) != "nan":
+                pct = ((curr - prev) / prev) * 100
+                icon = "🟢" if pct >= 0 else "🔴"
+                display_name = sym.replace(".BK", "")
+                text += f"{icon} {display_name}: {curr:,.2f} ({pct:+.2f}%)\n"
+        except Exception:
+            pass
+    return text
+
+def get_thai_news():
+    """ดึงข่าวหุ้นไทยพร้อมสรุปสาระสำคัญ"""
+    text = "\n📰 ข่าวสำคัญตลาดหุ้นไทยรอบ 24 ชม.\n"
+    try:
+        feed = feedparser.parse("https://www.kaohoon.com/feed")
+        entries = [
+            e for e in feed.entries 
+            if len(e.title.strip()) > 15 and "สังคมข่าวหุ้น" not in e.title and "เด็กแนว" not in e.title
+        ][:3]
+        if not entries:
+            feed = feedparser.parse("https://news.google.com/rss/search?q=(ตลาดหุ้นไทย+OR+ดัชนีหุ้นไทย+OR+SET50)+when:24h&hl=th&gl=TH&ceid=TH:th")
+            entries = feed.entries[:3]
+            
+        for entry in entries:
+            title = entry.title.split(" - ")[0].strip()
+            summary = clean_text(entry.get("summary", ""))
+            if summary and len(summary) > 20 and summary.lower() != title.lower():
+                short_sum = summary[:160] + "..." if len(summary) > 160 else summary
+                text += f"🔹 {title}\n   ↳ {short_sum}\n\n"
+            else:
+                text += f"🔹 {title}\n\n"
+    except Exception:
+        text += "  - ดึงข้อมูลไม่สำเร็จ\n\n"
+    return text
+
+def get_thai_upcoming_14d_events():
+    """ปัจจัยตลาดหุ้นไทยล่วงหน้า 14 วัน (วันจันทร์)"""
+    text = "📅 ไฮไลต์ปัจจัยตลาดหุ้นไทยล่วงหน้า 14 วัน\n"
+    url = "https://news.google.com/rss/search?q=(กนง.+OR+เงินเฟ้อไทย+OR+ดัชนีหุ้นไทย)+when:7d&hl=th&gl=TH&ceid=TH:th"
+    try:
+        feed = feedparser.parse(url)
+        count = 0
+        for entry in feed.entries:
+            title = entry.title.split(" - ")[0].strip()
+            if len(title) > 20 and count < 4:
+                text += f"📌 {title}\n"
+                count += 1
+        if count == 0:
+            text += "▫️ ติดตามทิศทางเม็ดเงินลงทุนต่างชาติและนโยบายเศรษฐกิจในประเทศ\n"
+    except Exception:
+        text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n"
+    return text + "\n"
+
+# ==================== ส่วนข้อมูลตลาดหุ้นสหรัฐฯ (14:00 น.) ====================
+
+def get_us_market_summary():
+    """ดึงภาพรวมดัชนีหลักสหรัฐฯ"""
+    tickers = {"S&P 500": "^GSPC", "Nasdaq": "^IXIC", "Dow Jones": "^DJI"}
+    text = "📊 สรุปภาพรวมดัชนีตลาดสหรัฐฯ\n"
+    for name, symbol in tickers.items():
         try:
             ticker = yf.Ticker(symbol)
             h = ticker.history(period="5d").dropna(subset=["Close"])
@@ -101,149 +168,96 @@ def get_market_summary():
                 text += f"▫️ {name}: ข้อมูลไม่เพียงพอ\n"
         except Exception:
             text += f"▫️ {name}: ดึงข้อมูลไม่สำเร็จ\n"
-            
-    text += get_set_index()
     return text
 
-def get_watchlist_summary():
-    """ดึงข้อมูลหุ้นรายตัวที่น่าสนใจ"""
-    text = "\n🎯 หุ้นเด่นที่น่าจับตา\n"
-    for market, symbols in WATCHLIST.items():
-        text += f"[{market}]\n"
-        for sym in symbols:
+def get_us_watchlist():
+    """ดึงราคาหุ้นสหรัฐฯ เด่น"""
+    text = "\n🎯 หุ้นสหรัฐฯ เด่นที่น่าจับตา\n"
+    for sym in WATCHLIST_US:
+        try:
+            t = yf.Ticker(sym)
+            curr, prev = None, None
             try:
-                t = yf.Ticker(sym)
-                curr, prev = None, None
-                
-                try:
-                    curr = t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
-                    prev = t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
-                except Exception:
-                    pass
-                
-                if curr is None or prev is None or str(curr) == "nan":
-                    h = t.history(period="1mo").dropna(subset=["Close"])
-                    closes = [c for c in h["Close"].tolist() if str(c) != "nan" and c > 0]
-                    if len(closes) >= 2:
-                        curr = closes[-1]
-                        prev = closes[-2]
-                
-                if curr is not None and prev is not None and str(curr) != "nan":
-                    pct = ((curr - prev) / prev) * 100
-                    icon = "🟢" if pct >= 0 else "🔴"
-                    display_name = sym.replace(".BK", "")
-                    text += f"{icon} {display_name}: {curr:,.2f} ({pct:+.2f}%)\n"
+                curr = t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
+                prev = t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
             except Exception:
                 pass
+            if curr is None or prev is None or str(curr) == "nan":
+                h = t.history(period="1mo").dropna(subset=["Close"])
+                closes = [c for c in h["Close"].tolist() if str(c) != "nan" and c > 0]
+                if len(closes) >= 2:
+                    curr, prev = closes[-1], closes[-2]
+            if curr is not None and prev is not None and str(curr) != "nan":
+                pct = ((curr - prev) / prev) * 100
+                icon = "🟢" if pct >= 0 else "🔴"
+                text += f"{icon} {sym}: {curr:,.2f} ({pct:+.2f}%)\n"
+        except Exception:
+            pass
     return text
 
-def get_daily_news():
-    """ดึงข่าวรอบ 24 ชม. พร้อมสรุปเนื้อหาให้อ่านเข้าใจง่าย"""
-    text = "\n📰 ข่าวสำคัญรอบ 24 ชม.\n"
-    
-    # 1. ข่าวหุ้นสหรัฐฯ (ดึงจาก Yahoo Finance RSS ที่มีบทสรุปเนื้อหาชัดเจน)
-    text += "\n• ข่าวหุ้นสหรัฐฯ:\n"
+def get_us_news():
+    """ดึงข่าวหุ้นสหรัฐฯ แปลไทยพร้อมสรุปย่อ"""
+    text = "\n📰 ข่าวสำคัญตลาดหุ้นสหรัฐฯ รอบ 24 ชม.\n"
     try:
-        us_feed = feedparser.parse("https://finance.yahoo.com/news/rssindex")
-        entries = us_feed.entries[:3]
+        feed = feedparser.parse("https://finance.yahoo.com/news/rssindex")
+        entries = feed.entries[:3]
         if not entries:
-            us_feed = feedparser.parse("https://news.google.com/rss/search?q=stock+market+when:24h&hl=en-US&gl=US&ceid=US:en")
-            entries = us_feed.entries[:3]
-            
+            feed = feedparser.parse("https://news.google.com/rss/search?q=stock+market+when:24h&hl=en-US&gl=US&ceid=US:en")
+            entries = feed.entries[:3]
         for entry in entries:
             raw_title = entry.title.split(" - ")[0].strip()
             th_title = translate_to_thai(raw_title)
-            
-            # ดึงและแปลเนื้อหาสรุป
-            raw_summary = clean_text(entry.get("summary", ""))
-            if raw_summary and len(raw_summary) > 20 and raw_summary.lower() != raw_title.lower():
-                th_summary = translate_to_thai(raw_summary[:180])
-                text += f"🔹 {th_title}\n   ↳ {th_summary}\n\n"
+            raw_sum = clean_text(entry.get("summary", ""))
+            if raw_sum and len(raw_sum) > 20 and raw_sum.lower() != raw_title.lower():
+                th_sum = translate_to_thai(raw_sum[:180])
+                text += f"🔹 {th_title}\n   ↳ {th_sum}\n\n"
             else:
                 text += f"🔹 {th_title}\n\n"
     except Exception:
-        text += "  - ดึงข้อมูลไม่สำเร็จ\n"
-        
-    # 2. ข่าวหุ้นไทย (ดึงจากสื่อเศรษฐกิจที่มีเนื้อหาสรุป)
-    text += "• ข่าวหุ้นไทย:\n"
-    try:
-        th_feed = feedparser.parse("https://www.kaohoon.com/feed")
-        entries = [
-            e for e in th_feed.entries 
-            if len(e.title.strip()) > 15 and "สังคมข่าวหุ้น" not in e.title and "เด็กแนว" not in e.title
-        ][:3]
-        
-        if not entries:
-            th_feed = feedparser.parse("https://news.google.com/rss/search?q=(ตลาดหุ้นไทย+OR+ดัชนีหุ้นไทย+OR+SET50)+when:24h&hl=th&gl=TH&ceid=TH:th")
-            entries = th_feed.entries[:3]
-            
-        for entry in entries:
-            title = entry.title.split(" - ")[0].strip()
-            raw_summary = clean_text(entry.get("summary", ""))
-            if raw_summary and len(raw_summary) > 20 and raw_summary.lower() != title.lower():
-                short_summary = raw_summary[:180] + "..." if len(raw_summary) > 180 else raw_summary
-                text += f"🔹 {title}\n   ↳ {short_summary}\n\n"
-            else:
-                text += f"🔹 {title}\n\n"
-    except Exception:
-        text += "  - ดึงข้อมูลไม่สำเร็จ\n"
-        
+        text += "  - ดึงข้อมูลไม่สำเร็จ\n\n"
     return text
 
 def get_tradingview_news():
-    """ดึงข่าว TradingView พร้อมสรุปเนื้อหา"""
+    """ดึงข่าว TradingView แปลไทย"""
     text = "📈 ข่าวเด่นจาก TradingView\n"
     url = "https://news.google.com/rss/search?q=site:tradingview.com/news+when:24h&hl=en-US&gl=US&ceid=US:en"
     try:
         feed = feedparser.parse(url)
-        items = feed.entries[:3]
-        if items:
-            for entry in items:
-                raw_title = entry.title.split(" - ")[0].strip()
-                th_title = translate_to_thai(raw_title)
-                raw_summary = clean_text(entry.get("summary", ""))
-                if raw_summary and len(raw_summary) > 30 and raw_summary.lower() != raw_title.lower():
-                    th_summary = translate_to_thai(raw_summary[:160])
-                    text += f"• {th_title}\n  ↳ {th_summary}\n\n"
-                else:
-                    text += f"• {th_title}\n\n"
-        else:
-            text += "• ติดตามความเคลื่อนไหวด้านเทคนิคและกราฟราคาบน TradingView\n\n"
+        for entry in feed.entries[:3]:
+            raw_title = entry.title.split(" - ")[0].strip()
+            th_title = translate_to_thai(raw_title)
+            raw_sum = clean_text(entry.get("summary", ""))
+            if raw_sum and len(raw_sum) > 30 and raw_sum.lower() != raw_title.lower():
+                th_sum = translate_to_thai(raw_sum[:160])
+                text += f"• {th_title}\n  ↳ {th_sum}\n\n"
+            else:
+                text += f"• {th_title}\n\n"
     except Exception:
         text += "▫️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n\n"
     return text
 
-def get_upcoming_14d_events():
-    """ดึงปัจจัยล่วงหน้า 14 วัน (สำหรับวันจันทร์)"""
-    text = "📅 ไฮไลต์ปฏิทินเศรษฐกิจ & ปัจจัยล่วงหน้า 14 วัน\n"
+def get_us_upcoming_14d_events():
+    """ปัจจัยปฏิทินเศรษฐกิจสหรัฐฯ ล่วงหน้า 14 วัน (วันจันทร์)"""
+    text = "📅 ไฮไลต์ปฏิทินเศรษฐกิจสหรัฐฯ & ปัจจัยล่วงหน้า 14 วัน\n"
     url = "https://news.google.com/rss/search?q=economic+calendar+OR+FOMC+OR+CPI+when:7d&hl=en-US&gl=US&ceid=US:en"
     try:
         feed = feedparser.parse(url)
-        if feed.entries:
-            for entry in feed.entries[:4]:
-                raw_title = entry.title.split(" - ")[0].strip()
-                th_title = translate_to_thai(raw_title)
-                raw_summary = clean_text(entry.get("summary", ""))
-                if raw_summary and len(raw_summary) > 30 and raw_summary.lower() != raw_title.lower():
-                    th_summary = translate_to_thai(raw_summary[:160])
-                    text += f"📌 {th_title}\n   ↳ {th_summary}\n\n"
-                else:
-                    text += f"📌 {th_title}\n\n"
-        else:
-            text += "▫️ ติดตามตัวเลขเศรษฐกิจสำคัญประจำสัปดาห์\n\n"
+        for entry in feed.entries[:4]:
+            raw_title = entry.title.split(" - ")[0].strip()
+            th_title = translate_to_thai(raw_title)
+            text += f"📌 {th_title}\n"
     except Exception:
-        text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n\n"
-    return text
+        text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n"
+    return text + "\n"
+
+# ==================== ระบบส่งข้อความ ====================
 
 def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     max_length = 4000
     for i in range(0, len(message), max_length):
         chunk = message[i:i + max_length]
-        payload = {
-            "chat_id": TELEGRAM_CHAT_ID,
-            "text": chunk
-        }
+        payload = {"chat_id": TELEGRAM_CHAT_ID, "text": chunk}
         res = requests.post(url, json=payload, timeout=15)
         res.raise_for_status()
 
@@ -251,19 +265,34 @@ def main():
     now = get_thai_datetime()
     date_str = now.strftime("%d/%m/%Y")
     is_monday = (now.weekday() == 0)
-    
-    day_label = " (ฉบับวันจันทร์ + ปัจจัยล่วงหน้า 14 วัน)" if is_monday else ""
-    header = f"☀️ มอร์นิ่งบรีฟตลาดหุ้น {date_str}{day_label}\n{'─'*30}\n"
-    
-    message = header
-    message += get_market_summary()
-    message += get_watchlist_summary()
-    message += get_daily_news()
-    message += get_tradingview_news()
-    
-    if is_monday:
-        message += get_upcoming_14d_events()
-        
+
+    # เลือกรอบการทำงาน: ถ้าก่อนเที่ยงเป็นรอบไทย (09:00 น.) ถ้าหลังเที่ยงเป็นรอบสหรัฐฯ (14:00 น.)
+    override = os.environ.get("SESSION_OVERRIDE", "auto")
+    if override in ["thai", "us"]:
+        session = override
+    else:
+        session = "thai" if now.hour < 12 else "us"
+
+    if session == "thai":
+        day_label = " (ฉบับวันจันทร์ + ปัจจัยล่วงหน้า 14 วัน)" if is_monday else ""
+        header = f"☀️ มอร์นิ่งบรีฟตลาดหุ้นไทย {date_str}{day_label}\n{'─'*30}\n"
+        message = header
+        message += get_thai_market_summary()
+        message += get_thai_watchlist()
+        message += get_thai_news()
+        if is_monday:
+            message += get_thai_upcoming_14d_events()
+    else:
+        day_label = " (ฉบับวันจันทร์ + ปัจจัยล่วงหน้า 14 วัน)" if is_monday else ""
+        header = f"🌤️ อาฟเตอร์นูนบรีฟตลาดหุ้นสหรัฐฯ {date_str}{day_label}\n{'─'*30}\n"
+        message = header
+        message += get_us_market_summary()
+        message += get_us_watchlist()
+        message += get_us_news()
+        message += get_tradingview_news()
+        if is_monday:
+            message += get_us_upcoming_14d_events()
+
     send_telegram_message(message)
 
 if __name__ == "__main__":
