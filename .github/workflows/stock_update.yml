@@ -2,9 +2,21 @@ name: Daily Stock Update to Telegram
 
 on:
   schedule:
-    # 02:05 UTC = 09:05 AM (UTC+7) ทุกวันจันทร์-ศุกร์
-    - cron: '5 2 * * 1-5'
-  workflow_dispatch: # สำหรับกดทดสอบด้วยตนเองได้ตลอดเวลา
+    # 02:00 UTC = 09:00 น. (รอบหุ้นไทย)
+    # 07:00 UTC = 14:00 น. (รอบหุ้นสหรัฐฯ)
+    # ทำงานทุกวันจันทร์-ศุกร์ (1-5)
+    - cron: '0 2,7 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      session:
+        description: 'เลือกรอบการรัน (auto / thai / us)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - thai
+          - us
 
 jobs:
   run-summary:
@@ -27,5 +39,6 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SESSION_OVERRIDE: ${{ github.event.inputs.session }}
         run: |
           python main.py
