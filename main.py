@@ -11,7 +11,6 @@ TELEGRAM_BOT_TOKEN = (
 )
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "8479818984"
 
-# รายชื่อหุ้นที่ติดตาม
 WATCHLIST_THAI = ["DELTA.BK", "PTT.BK"]
 WATCHLIST_US = ["PLTR", "AMD", "NVDA"]
 
@@ -28,9 +27,11 @@ def clean_text(raw_html):
     return " ".join(text.split())
 
 def translate_to_thai(text):
-    """แปลข้อความภาษาอังกฤษเป็นภาษาไทย"""
-    if not text:
+    """แปลข้อความภาษาอังกฤษเป็นภาษาไทย (ใส่ Header ป้องกัน 403 + มีระบบสำรอง)"""
+    if not text or not text.strip():
         return ""
+    
+    # 1. ลองแปลผ่าน Google Translate API
     try:
         url = "https://translate.googleapis.com/translate_a/single"
         params = {
@@ -38,22 +39,41 @@ def translate_to_thai(text):
             "sl": "auto",
             "tl": "th",
             "dt": "t",
-            "q": text
+            "q": text.strip()
         }
-        res = requests.get(url, params=params, timeout=5)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept": "*/*"
+        }
+        res = requests.get(url, params=params, headers=headers, timeout=8)
         if res.status_code == 200:
             data = res.json()
-            translated = "".join([seg[0] for seg in data[0] if seg[0]])
-            return translated.strip()
+            if data and data[0]:
+                translated = "".join([seg[0] for seg in data[0] if seg and seg[0]])
+                if translated.strip():
+                    return translated.strip()
     except Exception:
         pass
+
+    # 2. ระบบแปลสำรอง (MyMemory API)
+    try:
+        mm_url = "https://api.mymemory.translated.net/get"
+        mm_params = {"q": text.strip()[:450], "langpair": "en|th"}
+        res = requests.get(mm_url, params=mm_params, timeout=5)
+        if res.status_code == 200:
+            translated = res.json().get("responseData", {}).get("translatedText", "")
+            if translated and translated.strip():
+                return translated.strip()
+    except Exception:
+        pass
+
     return text
 
 # ==================== ส่วนข้อมูลตลาดหุ้นไทย (09:00 น.) ====================
 
 def get_thai_market_summary():
-    """ดึง SET Index จาก TradingView Scanner API"""
-    text = "📊 สรุปดัชนีตลาดหุ้นไทย\n"
+    """ดึง SET Index (TradingView Scanner + สำรองจากเว็บตลาดหลักทรัพย์ฯ)"""
+    # วิธีที่ 1: ดึงจาก TradingView Scanner API
     try:
         url = "https://scanner.tradingview.com/thailand/scan"
         payload = {
@@ -64,18 +84,35 @@ def get_thai_market_summary():
         res = requests.post(url, json=payload, headers=headers, timeout=10)
         if res.status_code == 200:
             items = res.json().get("data", [])
-            if items:
-                row = items[0].get("d", [])
-                close_price = row[0]
-                pct_chg = row
-                abs_chg = row
+            if items and "d" in items[0]:
+                d = items[0]["d"]
+                close_price = float(d[0])
+                pct_chg = float(d)
+                abs_chg = float(d)
                 icon = "🟢" if pct_chg >= 0 else "🔴"
-                text += f"{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
-                return text
+                return f"📊 สรุปดัชนีตลาดหุ้นไทย\n{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
     except Exception:
         pass
-    text += "▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
-    return text
+
+    # วิธีที่ 2 (สำรอง): ดึงจากเว็บตลาดหลักทรัพย์แห่งประเทศไทยโดยตรง
+    try:
+        url = "https://marketdata.set.or.th/mkt/marketsummary.do?language=th&country=TH"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code == 200:
+            soup = BeautifulSoup(res.text, "html.parser")
+            for r in soup.find_all("tr"):
+                cols = [td.get_text(strip=True) for td in r.find_all("td")]
+                if cols and cols[0] == "SET":
+                    price = cols
+                    chg = cols
+                    pct = cols[3]
+                    icon = "🔴" if chg.startswith("-") else "🟢"
+                    return f"📊 สรุปดัชนีตลาดหุ้นไทย\n{icon} SET Index: {price} ({chg}, {pct}%)\n"
+    except Exception:
+        pass
+
+    return "📊 สรุปดัชนีตลาดหุ้นไทย\n▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
 
 def get_thai_watchlist():
     """ดึงราคาหุ้นไทยเด่น"""
@@ -197,7 +234,7 @@ def get_us_watchlist():
 
 def get_us_news():
     """ดึงข่าวหุ้นสหรัฐฯ แปลไทยพร้อมสรุปย่อ"""
-    text = "\n📰 ข่าวสำคัญตลาดหุ้นสหรัฐฯ รอบ 24 ชม.\n"
+    text = "\n📰 ข่าวสำคัญตลาดหุ้นสหรัฐฯ รอบ 24 ชม. (แปลไทย)\n"
     try:
         feed = feedparser.parse("https://finance.yahoo.com/news/rssindex")
         entries = feed.entries[:3]
@@ -218,8 +255,8 @@ def get_us_news():
     return text
 
 def get_tradingview_news():
-    """ดึงข่าว TradingView แปลไทย"""
-    text = "📈 ข่าวเด่นจาก TradingView\n"
+    """ดึงข่าว TradingView แปลไทยพร้อมสรุปย่อ"""
+    text = "📈 ข่าวเด่นจาก TradingView (แปลไทย)\n"
     url = "https://news.google.com/rss/search?q=site:tradingview.com/news+when:24h&hl=en-US&gl=US&ceid=US:en"
     try:
         feed = feedparser.parse(url)
@@ -237,8 +274,8 @@ def get_tradingview_news():
     return text
 
 def get_us_upcoming_14d_events():
-    """ปัจจัยปฏิทินเศรษฐกิจสหรัฐฯ ล่วงหน้า 14 วัน (วันจันทร์)"""
-    text = "📅 ไฮไลต์ปฏิทินเศรษฐกิจสหรัฐฯ & ปัจจัยล่วงหน้า 14 วัน\n"
+    """ปัจจัยปฏิทินเศรษฐกิจสหรัฐฯ ล่วงหน้า 14 วัน (วันจันทร์) แปลไทย"""
+    text = "📅 ไฮไลต์ปฏิทินเศรษฐกิจสหรัฐฯ & ปัจจัยล่วงหน้า 14 วัน (แปลไทย)\n"
     url = "https://news.google.com/rss/search?q=economic+calendar+OR+FOMC+OR+CPI+when:7d&hl=en-US&gl=US&ceid=US:en"
     try:
         feed = feedparser.parse(url)
@@ -266,7 +303,7 @@ def main():
     date_str = now.strftime("%d/%m/%Y")
     is_monday = (now.weekday() == 0)
 
-    # เลือกรอบการทำงาน: ถ้าก่อนเที่ยงเป็นรอบไทย (09:00 น.) ถ้าหลังเที่ยงเป็นรอบสหรัฐฯ (14:00 น.)
+    # เลือกรอบ: ก่อนเที่ยง = รอบไทย (09:00 น.), หลังเที่ยง = รอบสหรัฐฯ (14:00 น.)
     override = os.environ.get("SESSION_OVERRIDE", "auto")
     if override in ["thai", "us"]:
         session = override
