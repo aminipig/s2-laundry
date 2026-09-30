@@ -1,0 +1,44 @@
+name: Stock Alert to Telegram
+
+on:
+  schedule:
+    # 02:00 UTC = 09:00 น. เวลาไทย (รอบหุ้นไทย)
+    - cron: '0 2 * * 1-5'
+    # 07:00 UTC = 14:00 น. เวลาไทย (รอบหุ้นสหรัฐฯ)
+    - cron: '0 7 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'เลือกรอบที่ต้องการส่ง (all = ส่งทั้งคู่เพื่อทดสอบ / thai / us)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - thai
+          - us
+
+jobs:
+  run-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ติดตั้งแพ็กเกจที่จำเป็นตรงนี้ทันที ไม่ต้องมี requirements.txt ให้รก
+      - name: Install dependencies
+        run: |
+          pip install requests yfinance feedparser beautifulsoup4 deep-translator
+
+      - name: Run Stock Script
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          INPUT_TARGET: ${{ github.event.inputs.target }}
+        run: |
+          python stock_alert.py
