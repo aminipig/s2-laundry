@@ -13,7 +13,7 @@ TELEGRAM_BOT_TOKEN = (
 )
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "8479818984"
 
-# หุ้นเด่นที่มีสภาพคล่องและเคลื่อนไหวสำคัญของตลาด
+# หุ้นเด่นที่มีสภาพคล่องและการเคลื่อนไหวสำคัญของตลาด
 WATCHLIST_THAI = ["DELTA.BK", "GULF.BK", "ADVANC.BK", "PTT.BK", "CPALL.BK", "SCB.BK", "KBANK.BK", "AOT.BK"]
 WATCHLIST_US = ["AMD", "PLTR", "NVDA", "GOOGL", "MSFT", "AMZN", "AAPL", "TSLA"]
 
@@ -34,13 +34,13 @@ def translate_to_thai(text):
     text_clean = text.strip()
     time.sleep(0.5)
 
-    # 1. GoogleTranslator จาก deep-translator
+    # 1. แปลด้วย GoogleTranslator
     try:
         translated = GoogleTranslator(source="auto", target="th").translate(text_clean[:450])
         if translated and translated.strip():
             return translated.strip()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"GoogleTranslator error: {e}")
 
     # 2. ระบบสำรอง (Google Clients5 Endpoint)
     try:
@@ -54,8 +54,8 @@ def translate_to_thai(text):
                 return data[0][0].strip()
             elif isinstance(data, dict) and "sentences" in data:
                 return "".join([s.get("trans", "") for s in data["sentences"]]).strip()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Clients5 error: {e}")
 
     return text
 
@@ -71,7 +71,7 @@ def send_telegram(message):
 # ==================== 1. ระบบตลาดหุ้นไทย (รอบ 09:00 น.) ====================
 
 def get_set_index():
-    # วิธีที่ 1: TradingView Scanner API
+    # วิธีที่ 1: TradingView Scanner API (แก้ไข index และ ให้ถูกต้องแล้ว)
     try:
         url = "https://scanner.tradingview.com/thailand/scan"
         payload = {
@@ -89,10 +89,10 @@ def get_set_index():
                 abs_chg = float(d)
                 icon = "🟢" if pct_chg >= 0 else "🔴"
                 return f"📊 สรุปดัชนีตลาดหุ้นไทย\n{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"TradingView scanner: {e}")
 
-    # วิธีที่ 2 (สำรอง): เว็บตลาดหลักทรัพย์แห่งประเทศไทย
+    # วิธีที่ 2 (สำรอง): เว็บตลาดหลักทรัพย์แห่งประเทศไทยโดยตรง
     try:
         url = "https://marketdata.set.or.th/mkt/marketsummary.do?language=th&country=TH"
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -107,8 +107,8 @@ def get_set_index():
                     pct = cols
                     icon = "🔴" if chg.startswith("-") else "🟢"
                     return f"📊 สรุปดัชนีตลาดหุ้นไทย\n{icon} SET Index: {price} ({chg}, {pct}%)\n"
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"SET marketdata: {e}")
 
     return "📊 สรุปดัชนีตลาดหุ้นไทย\n▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
 
@@ -119,8 +119,8 @@ def get_thai_watchlist():
             t = yf.Ticker(sym)
             curr, prev = None, None
             try:
-                curr = t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
-                prev = t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
+                curr = getattr(t.fast_info, 'last_price', None) or t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
+                prev = getattr(t.fast_info, 'previous_close', None) or t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
             except Exception:
                 pass
             if curr is None or prev is None or str(curr) == "nan":
@@ -182,7 +182,7 @@ def get_thai_upcoming_14d():
 def run_thai(is_monday):
     date_str = get_thai_datetime().strftime("%d/%m/%Y")
     day_label = " (ฉบับวันจันทร์ + ปัจจัยล่วงหน้า 14 วัน)" if is_monday else ""
-    header = f"☀️️ มอร์นิ่งบรีฟตลาดหุ้นไทย {date_str}{day_label}\n{'─'*30}\n"
+    header = f"☀️ มอร์นิ่งบรีฟตลาดหุ้นไทย {date_str}{day_label}\n{'─'*30}\n"
     msg = header + get_set_index() + get_thai_watchlist() + get_thai_news()
     if is_monday:
         msg += get_thai_upcoming_14d()
@@ -218,8 +218,8 @@ def get_us_watchlist():
             t = yf.Ticker(sym)
             curr, prev = None, None
             try:
-                curr = t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
-                prev = t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
+                curr = getattr(t.fast_info, 'last_price', None) or t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
+                prev = getattr(t.fast_info, 'previous_close', None) or t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
             except Exception:
                 pass
             if curr is None or prev is None or str(curr) == "nan":
@@ -272,7 +272,7 @@ def get_tradingview_news():
             else:
                 text += f"• {th_title}\n\n"
     except Exception:
-        text += "▫️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n\n"
+        text += "▫️️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n\n"
     return text
 
 def get_us_upcoming_14d():
