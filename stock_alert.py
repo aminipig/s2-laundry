@@ -13,9 +13,9 @@ TELEGRAM_BOT_TOKEN = (
 )
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "8479818984"
 
-# หุ้นเด่นที่มีสภาพคล่องและการเคลื่อนไหวสำคัญของตลาด
-WATCHLIST_THAI = ["DELTA.BK", "GULF.BK", "ADVANC.BK", "PTT.BK", "CPALL.BK", "SCB.BK", "KBANK.BK", "AOT.BK"]
-WATCHLIST_US = ["AMD", "PLTR", "NVDA", "GOOGL", "MSFT", "AMZN", "AAPL", "TSLA"]
+# รายชื่อสำรองสำหรับช่วงเช้าตรู่ที่ตลาดยังไม่มีวอลุ่มการซื้อขาย
+BACKUP_THAI = ["DELTA.BK", "GULF.BK", "ADVANC.BK", "PTT.BK", "CPALL.BK", "SCB.BK", "KBANK.BK", "AOT.BK"]
+BACKUP_US = ["NVDA", "TSLA", "AMD", "PLTR", "AAPL", "MSFT", "AMZN", "GOOGL"]
 
 def get_thai_datetime():
     tz_thai = timezone(timedelta(hours=7))
@@ -28,21 +28,18 @@ def clean_text(raw_html):
     return " ".join(soup.get_text(separator=" ").strip().split())
 
 def translate_to_thai(text):
-    """แปลภาษาไทยด้วย deep-translator พร้อมหน่วงเวลาสั้นๆ ป้องกัน Error 429"""
     if not text or not text.strip():
         return ""
     text_clean = text.strip()
     time.sleep(0.5)
 
-    # 1. แปลด้วย GoogleTranslator
     try:
         translated = GoogleTranslator(source="auto", target="th").translate(text_clean[:450])
         if translated and translated.strip():
             return translated.strip()
-    except Exception as e:
-        print(f"GoogleTranslator error: {e}")
+    except Exception:
+        pass
 
-    # 2. ระบบสำรอง (Google Clients5 Endpoint)
     try:
         url = "https://clients5.google.com/translate_a/t"
         params = {"client": "dict-chrome-ex", "sl": "auto", "tl": "th", "q": text_clean[:450]}
@@ -54,8 +51,8 @@ def translate_to_thai(text):
                 return data[0][0].strip()
             elif isinstance(data, dict) and "sentences" in data:
                 return "".join([s.get("trans", "") for s in data["sentences"]]).strip()
-    except Exception as e:
-        print(f"Clients5 error: {e}")
+    except Exception:
+        pass
 
     return text
 
@@ -68,10 +65,9 @@ def send_telegram(message):
         res = requests.post(url, json=payload, timeout=15)
         res.raise_for_status()
 
-# ==================== 1. ระบบตลาดหุ้นไทย (รอบ 09:00 น.) ====================
+# ==================== ข้อมูลดัชนี & หุ้นไทย ====================
 
-def get_set_index():
-    # วิธีที่ 1: TradingView Scanner API (แก้ไข index และ ให้ถูกต้องแล้ว)
+def get_set_index(session_title="ดัชนีตลาดหุ้นไทย"):
     try:
         url = "https://scanner.tradingview.com/thailand/scan"
         payload = {
@@ -85,14 +81,13 @@ def get_set_index():
             if items and "d" in items[0]:
                 d = items[0]["d"]
                 close_price = float(d[0])
-                pct_chg = float(d)
-                abs_chg = float(d)
+                pct_chg = float(d[1])
+                abs_chg = float(d[2])
                 icon = "🟢" if pct_chg >= 0 else "🔴"
-                return f"📊 สรุปดัชนีตลาดหุ้นไทย\n{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
+                return f"📊 สรุป{session_title}\n{icon} SET Index: {close_price:,.2f} ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
     except Exception as e:
         print(f"TradingView scanner: {e}")
 
-    # วิธีที่ 2 (สำรอง): เว็บตลาดหลักทรัพย์แห่งประเทศไทยโดยตรง
     try:
         url = "https://marketdata.set.or.th/mkt/marketsummary.do?language=th&country=TH"
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -102,25 +97,61 @@ def get_set_index():
             for r in soup.find_all("tr"):
                 cols = [td.get_text(strip=True) for td in r.find_all("td")]
                 if cols and cols[0] == "SET":
-                    price = cols
-                    chg = cols
-                    pct = cols
+                    price = cols[1]
+                    chg = cols[2]
+                    pct = cols[3]
                     icon = "🔴" if chg.startswith("-") else "🟢"
-                    return f"📊 สรุปดัชนีตลาดหุ้นไทย\n{icon} SET Index: {price} ({chg}, {pct}%)\n"
+                    return f"📊 สรุป{session_title}\n{icon} SET Index: {price} ({chg}, {pct}%)\n"
     except Exception as e:
         print(f"SET marketdata: {e}")
 
-    return "📊 สรุปดัชนีตลาดหุ้นไทย\n▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
+    return f"📊 สรุป{session_title}\n▫️ SET Index: ข้อมูลไม่เพียงพอ\n"
 
-def get_thai_watchlist():
-    text = "\n🎯 หุ้นไทยเด่นที่น่าจับตาประจำวัน (Top Movers)\n"
-    for sym in WATCHLIST_THAI:
+def get_thai_watchlist(title_label="ราคาหุ้นเด่นที่น่าจับตา"):
+    text = f"\n🎯 {title_label} (Top Movers ตามข้อมูลจริงของตลาด)\n"
+    
+    # 1. สแกนดึงหุ้นที่มีมูลค่าการซื้อขายสูงสุดของตลาดไทยจริงแบบไดนามิก (Most Active by Value)
+    try:
+        url = "https://scanner.tradingview.com/thailand/scan"
+        payload = {
+            "filter": [
+                {"left": "type", "operation": "equal", "right": "stock"},
+                {"left": "subtype", "operation": "in_range", "right": ["common", "foreign"]}
+            ],
+            "options": {"lang": "en"},
+            "symbols": {"query": {"types": []}},
+            "columns": ["name", "close", "change", "change_abs", "Value.Traded"],
+            "sort": {"sortBy": "Value.Traded", "sortOrder": "desc"},
+            "range": [0, 8]
+        }
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        res = requests.post(url, json=payload, headers=headers, timeout=10)
+        if res.status_code == 200:
+            items = res.json().get("data", [])
+            if items:
+                dynamic_text = ""
+                for item in items:
+                    d = item.get("d", [])
+                    if len(d) >= 4:
+                        name = str(d[0])
+                        close_price = float(d[1])
+                        pct_chg = float(d[2])
+                        abs_chg = float(d[3])
+                        icon = "🟢" if pct_chg > 0 else ("🔴" if pct_chg < 0 else "▫️")
+                        dynamic_text += f"{icon} {name}: {close_price:,.2f} บาท ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
+                if dynamic_text:
+                    return text + dynamic_text
+    except Exception as e:
+        print(f"Thai dynamic scanner notice: {e}")
+
+    # 2. ระบบสำรอง: กรณีตลาดยังไม่เปิดทำการ ดึงจากหุ้นหลัก
+    for sym in BACKUP_THAI:
         try:
             t = yf.Ticker(sym)
             curr, prev = None, None
             try:
-                curr = getattr(t.fast_info, 'last_price', None) or t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
-                prev = getattr(t.fast_info, 'previous_close', None) or t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
+                curr = getattr(t.fast_info, 'last_price', None) or t.fast_info.get("lastPrice")
+                prev = getattr(t.fast_info, 'previous_close', None) or t.fast_info.get("previousClose")
             except Exception:
                 pass
             if curr is None or prev is None or str(curr) == "nan":
@@ -133,22 +164,22 @@ def get_thai_watchlist():
                 chg = curr - prev
                 icon = "🟢" if pct > 0 else ("🔴" if pct < 0 else "▫️")
                 display_name = sym.replace(".BK", "")
-                text += f"{icon} {display_name}: {curr:,.2f} ({chg:+,.2f}, {pct:+.2f}%)\n"
+                text += f"{icon} {display_name}: {curr:,.2f} บาท ({chg:+,.2f}, {pct:+.2f}%)\n"
         except Exception:
             pass
     return text
 
-def get_thai_news():
-    text = "\n📰 ข่าวสำคัญตลาดหุ้นไทยรอบ 24 ชม. (พร้อมสรุปสาระสำคัญ)\n"
+def get_thai_news(query_keyword="ตลาดหุ้นไทย", section_title="ข่าวสำคัญรอบ 24 ชม."):
+    text = f"\n📰 {section_title}\n"
     try:
-        feed = feedparser.parse("https://www.kaohoon.com/feed")
-        entries = [
-            e for e in feed.entries 
-            if len(e.title.strip()) > 15 and "สังคมข่าวหุ้น" not in e.title and "เด็กแนว" not in e.title
-        ][:3]
+        feed = feedparser.parse(f"https://news.google.com/rss/search?q=({query_keyword})+when:24h&hl=th&gl=TH&ceid=TH:th")
+        entries = feed.entries[:3]
         if not entries:
-            feed = feedparser.parse("https://news.google.com/rss/search?q=(ตลาดหุ้นไทย+OR+ดัชนีหุ้นไทย+OR+SET50)+when:24h&hl=th&gl=TH&ceid=TH:th")
-            entries = feed.entries[:3]
+            feed = feedparser.parse("https://www.kaohoon.com/feed")
+            entries = [
+                e for e in feed.entries 
+                if len(e.title.strip()) > 15 and "สังคมข่าวหุ้น" not in e.title and "เด็กแนว" not in e.title
+            ][:3]
             
         for entry in entries:
             title = entry.title.split(" - ")[0].strip()
@@ -179,20 +210,11 @@ def get_thai_upcoming_14d():
         text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n"
     return text + "\n"
 
-def run_thai(is_monday):
-    date_str = get_thai_datetime().strftime("%d/%m/%Y")
-    day_label = " (ฉบับวันจันทร์ + ปัจจัยล่วงหน้า 14 วัน)" if is_monday else ""
-    header = f"☀️ มอร์นิ่งบรีฟตลาดหุ้นไทย {date_str}{day_label}\n{'─'*30}\n"
-    msg = header + get_set_index() + get_thai_watchlist() + get_thai_news()
-    if is_monday:
-        msg += get_thai_upcoming_14d()
-    send_telegram(msg)
+# ==================== เครื่องมือดึงข้อมูลสหรัฐฯ ====================
 
-# ==================== 2. ระบบตลาดหุ้นสหรัฐฯ (รอบ 14:00 น.) ====================
-
-def get_us_market_summary():
+def get_us_market_summary(session_title="ดัชนีตลาดสหรัฐฯ"):
     tickers = {"S&P 500": "^GSPC", "Nasdaq": "^IXIC", "Dow Jones": "^DJI"}
-    text = "📊 สรุปภาพรวมดัชนีตลาดสหรัฐฯ\n"
+    text = f"📊 สรุป{session_title}\n"
     for name, symbol in tickers.items():
         try:
             ticker = yf.Ticker(symbol)
@@ -211,15 +233,53 @@ def get_us_market_summary():
             text += f"▫️ {name}: ดึงข้อมูลไม่สำเร็จ\n"
     return text
 
-def get_us_watchlist():
-    text = "\n🎯 หุ้นสหรัฐฯ เด่นที่น่าจับตาประจำวัน (Top Movers)\n"
-    for sym in WATCHLIST_US:
+def get_us_watchlist(title_label="ราคาหุ้นเด่นที่น่าจับตา"):
+    text = f"\n🎯 {title_label} (Top Movers ตามข้อมูลจริงของตลาด)\n"
+
+    # 1. สแกนดึงหุ้นที่มีปริมาณการซื้อขายสูงสุดของสหรัฐฯ จริงแบบไดนามิก (Most Active by Volume)
+    try:
+        url = "https://scanner.tradingview.com/america/scan"
+        payload = {
+            "filter": [
+                {"left": "type", "operation": "equal", "right": "stock"},
+                {"left": "subtype", "operation": "in_range", "right": ["common"]},
+                {"left": "exchange", "operation": "in_range", "right": ["NASDAQ", "NYSE"]},
+                {"left": "close", "operation": "greater", "right": 5}
+            ],
+            "options": {"lang": "en"},
+            "symbols": {"query": {"types": []}},
+            "columns": ["name", "close", "change", "change_abs", "volume"],
+            "sort": {"sortBy": "volume", "sortOrder": "desc"},
+            "range": [0, 8]
+        }
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        res = requests.post(url, json=payload, headers=headers, timeout=10)
+        if res.status_code == 200:
+            items = res.json().get("data", [])
+            if items:
+                dynamic_text = ""
+                for item in items:
+                    d = item.get("d", [])
+                    if len(d) >= 4:
+                        name = str(d[0])
+                        close_price = float(d[1])
+                        pct_chg = float(d[2])
+                        abs_chg = float(d[3])
+                        icon = "🟢" if pct_chg > 0 else ("🔴" if pct_chg < 0 else "▫️")
+                        dynamic_text += f"{icon} {name}: {close_price:,.2f} USD ({abs_chg:+,.2f}, {pct_chg:+.2f}%)\n"
+                if dynamic_text:
+                    return text + dynamic_text
+    except Exception as e:
+        print(f"US dynamic scanner notice: {e}")
+
+    # 2. ระบบสำรอง: กรณีสแกนเนอร์ไม่ตอบสนอง ดึงจากหุ้นหลัก
+    for sym in BACKUP_US:
         try:
             t = yf.Ticker(sym)
             curr, prev = None, None
             try:
-                curr = getattr(t.fast_info, 'last_price', None) or t.fast_info.get("lastPrice") or t.fast_info.get("regularMarketPrice")
-                prev = getattr(t.fast_info, 'previous_close', None) or t.fast_info.get("previousClose") or t.fast_info.get("regularMarketPreviousClose")
+                curr = getattr(t.fast_info, 'last_price', None) or t.fast_info.get("lastPrice")
+                prev = getattr(t.fast_info, 'previous_close', None) or t.fast_info.get("previousClose")
             except Exception:
                 pass
             if curr is None or prev is None or str(curr) == "nan":
@@ -236,8 +296,8 @@ def get_us_watchlist():
             pass
     return text
 
-def get_us_news():
-    text = "\n📰 ข่าวสำคัญตลาดหุ้นสหรัฐฯ รอบ 24 ชม. (แปลไทยพร้อมสรุปสาระสำคัญ)\n"
+def get_us_news(section_title="ข่าวสำคัญตลาดหุ้นสหรัฐฯ รอบ 24 ชม."):
+    text = f"\n📰 {section_title} (แปลไทยพร้อมสรุปสาระสำคัญ)\n"
     try:
         feed = feedparser.parse("https://finance.yahoo.com/news/rssindex")
         entries = feed.entries[:3]
@@ -272,7 +332,7 @@ def get_tradingview_news():
             else:
                 text += f"• {th_title}\n\n"
     except Exception:
-        text += "▫️️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n\n"
+        text += "▫️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n\n"
     return text
 
 def get_us_upcoming_14d():
@@ -288,40 +348,113 @@ def get_us_upcoming_14d():
         text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n"
     return text + "\n"
 
-def run_us(is_monday):
+# ==================== 4 รอบการทำงาน ====================
+
+def run_us_close():
+    now = get_thai_datetime()
+    date_str = now.strftime("%d/%m/%Y")
+    friday_note = " (สรุปราคาปิดคืนวันศุกร์)" if now.weekday() == 5 else ""
+    header = f"🇺🇸 สรุปภาวะตลาดหุ้นสหรัฐฯ หลังปิดตลาด {date_str}{friday_note}\n{'─'*30}\n"
+    msg = header
+    msg += get_us_market_summary("ราคาปิดตลาดหุ้นสหรัฐฯ")
+    msg += get_us_watchlist("หุ้นสหรัฐฯ ที่มีการซื้อขายสูงสุด (Most Active)")
+    msg += get_us_news("ข่าวสำคัญตลาดหุ้นสหรัฐฯ หลังปิดตลาด")
+    msg += get_tradingview_news()
+    send_telegram(msg)
+    print(">>> [1/4] ส่งรอบ US Close (08:45 น.) สำเร็จ")
+
+def run_thai_morning(is_monday):
     date_str = get_thai_datetime().strftime("%d/%m/%Y")
     day_label = " (ฉบับวันจันทร์ + ปัจจัยล่วงหน้า 14 วัน)" if is_monday else ""
-    header = f"🌤️ อาฟเตอร์นูนบรีฟตลาดหุ้นสหรัฐฯ {date_str}{day_label}\n{'─'*30}\n"
-    msg = header + get_us_market_summary() + get_us_watchlist() + get_us_news() + get_tradingview_news()
+    header = f"🇹🇭 มอร์นิ่งบรีฟตลาดหุ้นไทยก่อนเปิดตลาด {date_str}{day_label}\n{'─'*30}\n"
+    msg = header
+    msg += get_set_index("ดัชนีตลาดหุ้นไทย (ก่อนเปิดตลาด)")
+    msg += get_thai_watchlist("หุ้นไทยที่มีมูลค่าซื้อขายสูงสุด (Most Active)")
+    msg += get_thai_news("ตลาดหุ้นไทย+OR+ดัชนีหุ้นไทย+OR+SET50", "ข่าวสำคัญตลาดหุ้นไทยก่อนเปิดตลาด 24 ชม.")
+    if is_monday:
+        msg += get_thai_upcoming_14d()
+    send_telegram(msg)
+    print(">>> [2/4] ส่งรอบ Thai Morning (09:00 น.) สำเร็จ")
+
+def run_us_pre(is_monday):
+    date_str = get_thai_datetime().strftime("%d/%m/%Y")
+    day_label = " (ฉบับวันจันทร์ + ปัจจัยล่วงหน้า 14 วัน)" if is_monday else ""
+    header = f"🇺🇸 มอร์นิ่งบรีฟตลาดหุ้นสหรัฐฯ ก่อนเปิดตลาด {date_str}{day_label}\n{'─'*30}\n"
+    msg = header
+    msg += get_us_market_summary("ดัชนีตลาดสหรัฐฯ (ก่อนเปิดตลาด)")
+    msg += get_us_watchlist("หุ้นสหรัฐฯ ที่มีปริมาณการซื้อขายสูงสุด (Most Active)")
+    msg += get_us_news("ข่าวสำคัญตลาดหุ้นสหรัฐฯ ก่อนเปิดตลาด 24 ชม.")
+    msg += get_tradingview_news()
     if is_monday:
         msg += get_us_upcoming_14d()
     send_telegram(msg)
+    print(">>> [3/4] ส่งรอบ US Pre-market (15:00 น.) สำเร็จ")
 
-# ==================== Main Controller ====================
+def run_thai_evening():
+    date_str = get_thai_datetime().strftime("%d/%m/%Y")
+    header = f"🇹🇭 สรุปภาวะตลาดหุ้นไทยหลังปิดตลาด {date_str}\n{'─'*30}\n"
+    msg = header
+    msg += get_set_index("ราคาปิดตลาดหุ้นไทย (SET Index)")
+    msg += get_thai_watchlist("หุ้นไทยที่มีมูลค่าซื้อขายสูงสุดรอบวัน (Most Active)")
+    msg += get_thai_news("ปิดตลาดหุ้นไทย+OR+สรุปภาวะตลาดหุ้นไทย+OR+SET+ปิด", "ข่าวและบทวิเคราะห์หลังปิดตลาด")
+    send_telegram(msg)
+    print(">>> [4/4] ส่งรอบ Thai Evening (17:00 น.) สำเร็จ")
 
 def main():
     target = os.environ.get("INPUT_TARGET", "auto")
+    cron_event = os.environ.get("SCHEDULE_CRON", "")
     now = get_thai_datetime()
-    is_monday = (now.weekday() == 0)
+    weekday = now.weekday()
+    is_monday = (weekday == 0)
 
-    # 1. กรณีผู้ใช้กดทดสอบผ่านปุ่ม Run workflow ด้วยตนเอง
-    if target == "thai":
-        run_thai(is_monday)
-    elif target == "us":
-        run_us(is_monday)
+    print(f"Starting Stock Alert: target={target}, cron={cron_event}, weekday={weekday}, hour={now.hour}")
+
+    if target == "us_close":
+        run_us_close()
+    elif target == "thai_morning":
+        run_thai_morning(is_monday)
+    elif target == "us_pre":
+        run_us_pre(is_monday)
+    elif target == "thai_evening":
+        run_thai_evening()
     elif target == "all":
-        # ส่งทดสอบทั้งสองตลาดพร้อมกัน
-        run_thai(is_monday)
-        time.sleep(2)
-        run_us(is_monday)
+        print("Testing ALL 4 sessions...")
+        run_us_close()
+        time.sleep(3)
+        run_thai_morning(is_monday)
+        time.sleep(3)
+        run_us_pre(is_monday)
+        time.sleep(3)
+        run_thai_evening()
+        print("Completed sending ALL 4 sessions!")
     else:
-        # 2. กรณีทำงานอัตโนมัติตามเวลา Cron
-        # รอบ 02:00 UTC (09:00 น. ไทย) -> ส่งหุ้นไทย
-        # รอบ 07:00 UTC (14:00 น. ไทย) -> ส่งหุ้นสหรัฐฯ
-        if now.hour < 12:
-            run_thai(is_monday)
+        if cron_event == "45 1 * * 2-6":
+            run_us_close()
+        elif cron_event == "0 2 * * 1-5":
+            run_thai_morning(is_monday)
+        elif cron_event == "0 8 * * 1-5":
+            run_us_pre(is_monday)
+        elif cron_event == "0 10 * * 1-5":
+            run_thai_evening()
         else:
-            run_us(is_monday)
+            if weekday == 5:
+                run_us_close()
+            elif weekday == 0:
+                if now.hour < 12:
+                    run_thai_morning(is_monday)
+                elif 12 <= now.hour < 16:
+                    run_us_pre(is_monday)
+                else:
+                    run_thai_evening()
+            else:
+                if now.hour < 9:
+                    run_us_close()
+                elif 9 <= now.hour < 12:
+                    run_thai_morning(is_monday)
+                elif 12 <= now.hour < 16:
+                    run_us_pre(is_monday)
+                else:
+                    run_thai_evening()
 
 if __name__ == "__main__":
     main()
