@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 import requests
@@ -13,7 +14,6 @@ TELEGRAM_BOT_TOKEN = (
 )
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID") or "8479818984"
 
-# รายชื่อสำรองสำหรับช่วงเช้าตรู่ที่ตลาดยังไม่มีวอลุ่มการซื้อขาย
 BACKUP_THAI = ["DELTA.BK", "GULF.BK", "ADVANC.BK", "PTT.BK", "CPALL.BK", "SCB.BK", "KBANK.BK", "AOT.BK"]
 BACKUP_US = ["NVDA", "TSLA", "AMD", "PLTR", "AAPL", "MSFT", "AMZN", "GOOGL"]
 
@@ -65,7 +65,7 @@ def send_telegram(message):
         res = requests.post(url, json=payload, timeout=15)
         res.raise_for_status()
 
-# ==================== ข้อมูลดัชนี & หุ้นไทย ====================
+# ==================== เครื่องมือดึงข้อมูลไทย ====================
 
 def get_set_index(session_title="ดัชนีตลาดหุ้นไทย"):
     try:
@@ -109,8 +109,6 @@ def get_set_index(session_title="ดัชนีตลาดหุ้นไท�
 
 def get_thai_watchlist(title_label="ราคาหุ้นเด่นที่น่าจับตา"):
     text = f"\n🎯 {title_label} (Top Movers ตามข้อมูลจริงของตลาด)\n"
-    
-    # 1. สแกนดึงหุ้นที่มีมูลค่าการซื้อขายสูงสุดของตลาดไทยจริงแบบไดนามิก (Most Active by Value)
     try:
         url = "https://scanner.tradingview.com/thailand/scan"
         payload = {
@@ -144,7 +142,6 @@ def get_thai_watchlist(title_label="ราคาหุ้นเด่นที�
     except Exception as e:
         print(f"Thai dynamic scanner notice: {e}")
 
-    # 2. ระบบสำรอง: กรณีตลาดยังไม่เปิดทำการ ดึงจากหุ้นหลัก
     for sym in BACKUP_THAI:
         try:
             t = yf.Ticker(sym)
@@ -235,8 +232,6 @@ def get_us_market_summary(session_title="ดัชนีตลาดสหรั
 
 def get_us_watchlist(title_label="ราคาหุ้นเด่นที่น่าจับตา"):
     text = f"\n🎯 {title_label} (Top Movers ตามข้อมูลจริงของตลาด)\n"
-
-    # 1. สแกนดึงหุ้นที่มีปริมาณการซื้อขายสูงสุดของสหรัฐฯ จริงแบบไดนามิก (Most Active by Volume)
     try:
         url = "https://scanner.tradingview.com/america/scan"
         payload = {
@@ -272,7 +267,6 @@ def get_us_watchlist(title_label="ราคาหุ้นเด่นที่�
     except Exception as e:
         print(f"US dynamic scanner notice: {e}")
 
-    # 2. ระบบสำรอง: กรณีสแกนเนอร์ไม่ตอบสนอง ดึงจากหุ้นหลัก
     for sym in BACKUP_US:
         try:
             t = yf.Ticker(sym)
@@ -357,7 +351,7 @@ def run_us_close():
     header = f"🇺🇸 สรุปภาวะตลาดหุ้นสหรัฐฯ หลังปิดตลาด {date_str}{friday_note}\n{'─'*30}\n"
     msg = header
     msg += get_us_market_summary("ราคาปิดตลาดหุ้นสหรัฐฯ")
-    msg += get_us_watchlist("หุ้นสหรัฐฯ ที่มีการซื้อขายสูงสุด (Most Active)")
+    msg += get_us_watchlist("หุ้นสหรัฐฯ ที่มีปริมาณการซื้อขายสูงสุด (Most Active)")
     msg += get_us_news("ข่าวสำคัญตลาดหุ้นสหรัฐฯ หลังปิดตลาด")
     msg += get_tradingview_news()
     send_telegram(msg)
@@ -401,60 +395,35 @@ def run_thai_evening():
     print(">>> [4/4] ส่งรอบ Thai Evening (17:00 น.) สำเร็จ")
 
 def main():
-    target = os.environ.get("INPUT_TARGET", "auto")
-    cron_event = os.environ.get("SCHEDULE_CRON", "")
     now = get_thai_datetime()
-    weekday = now.weekday()
-    is_monday = (weekday == 0)
+    is_monday = (now.weekday() == 0)
 
-    print(f"Starting Stock Alert: target={target}, cron={cron_event}, weekday={weekday}, hour={now.hour}")
+    # รับคำสั่งตรงจากพารามิเตอร์ --session ที่ GitHub Actions ส่งมา
+    session = None
+    if "--session" in sys.argv:
+        idx = sys.argv.index("--session")
+        if idx + 1 < len(sys.argv):
+            session = sys.argv[idx + 1]
 
-    if target == "us_close":
+    print(f"Executing session: {session} at Thai time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    if session == "us_close":
         run_us_close()
-    elif target == "thai_morning":
+    elif session == "thai_morning":
         run_thai_morning(is_monday)
-    elif target == "us_pre":
+    elif session == "us_pre":
         run_us_pre(is_monday)
-    elif target == "thai_evening":
+    elif session == "thai_evening":
         run_thai_evening()
-    elif target == "all":
-        print("Testing ALL 4 sessions...")
-        run_us_close()
-        time.sleep(3)
-        run_thai_morning(is_monday)
-        time.sleep(3)
-        run_us_pre(is_monday)
-        time.sleep(3)
-        run_thai_evening()
-        print("Completed sending ALL 4 sessions!")
     else:
-        if cron_event == "45 1 * * 2-6":
-            run_us_close()
-        elif cron_event == "0 2 * * 1-5":
-            run_thai_morning(is_monday)
-        elif cron_event == "0 8 * * 1-5":
-            run_us_pre(is_monday)
-        elif cron_event == "0 10 * * 1-5":
-            run_thai_evening()
-        else:
-            if weekday == 5:
-                run_us_close()
-            elif weekday == 0:
-                if now.hour < 12:
-                    run_thai_morning(is_monday)
-                elif 12 <= now.hour < 16:
-                    run_us_pre(is_monday)
-                else:
-                    run_thai_evening()
-            else:
-                if now.hour < 9:
-                    run_us_close()
-                elif 9 <= now.hour < 12:
-                    run_thai_morning(is_monday)
-                elif 12 <= now.hour < 16:
-                    run_us_pre(is_monday)
-                else:
-                    run_thai_evening()
+        print("Unknown or All: running all 4 sessions...")
+        run_us_close()
+        time.sleep(3)
+        run_thai_morning(is_monday)
+        time.sleep(3)
+        run_us_pre(is_monday)
+        time.sleep(3)
+        run_thai_evening()
 
 if __name__ == "__main__":
     main()
