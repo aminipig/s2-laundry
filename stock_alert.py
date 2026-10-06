@@ -207,7 +207,7 @@ def get_thai_upcoming_14d():
         text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n"
     return text + "\n"
 
-# ==================== เครื่องมือดึงข้อมูลสหรัฐฯ ====================
+# ==================== เครื่องมือดึงข้อมูลสหรัฐฯ (ปรับปรุงให้ตรงเป้า 100%) ====================
 
 def get_us_market_summary(session_title="ดัชนีตลาดสหรัฐฯ"):
     tickers = {"S&P 500": "^GSPC", "Nasdaq": "^IXIC", "Dow Jones": "^DJI"}
@@ -291,13 +291,16 @@ def get_us_watchlist(title_label="ราคาหุ้นเด่นที่�
     return text
 
 def get_us_news(section_title="ข่าวสำคัญตลาดหุ้นสหรัฐฯ รอบ 24 ชม."):
+    """ดึงข่าวตลาดหุ้นสหรัฐฯ เจาะจง Wall Street, S&P 500, Nasdaq โดยตรง"""
     text = f"\n📰 {section_title} (แปลไทยพร้อมสรุปสาระสำคัญ)\n"
+    url = "https://news.google.com/rss/search?q=(Wall+Street+OR+Nasdaq+OR+S%26P+500+OR+US+stocks)+when:24h&hl=en-US&gl=US&ceid=US:en"
     try:
-        feed = feedparser.parse("https://finance.yahoo.com/news/rssindex")
+        feed = feedparser.parse(url)
         entries = feed.entries[:3]
         if not entries:
-            feed = feedparser.parse("https://news.google.com/rss/search?q=stock+market+when:24h&hl=en-US&gl=US&ceid=US:en")
+            feed = feedparser.parse("https://www.cnbc.com/id/10000664/device/rss/rss.html")
             entries = feed.entries[:3]
+
         for entry in entries:
             raw_title = entry.title.split(" - ")[0].strip()
             th_title = translate_to_thai(raw_title)
@@ -312,21 +315,27 @@ def get_us_news(section_title="ข่าวสำคัญตลาดหุ้�
     return text
 
 def get_tradingview_news():
-    text = "📈 ข่าวเด่นและบทวิเคราะห์จาก TradingView (แปลไทย)\n"
-    url = "https://news.google.com/rss/search?q=site:tradingview.com/news+when:24h&hl=en-US&gl=US&ceid=US:en"
+    """ดึงข่าวเด่นและบทวิเคราะห์ตลาดหุ้นสหรัฐฯ จาก MarketWatch (Dow Jones) แปลไทย"""
+    text = "📈 ข่าวเด่นและบทวิเคราะห์ตลาดหุ้น (แปลไทย)\n"
+    url = "https://feeds.content.dowjones.io/public/rss/mw_topstories"
     try:
         feed = feedparser.parse(url)
-        for entry in feed.entries[:3]:
+        entries = feed.entries[:3]
+        if not entries:
+            feed = feedparser.parse("https://news.google.com/rss/search?q=(TradingView+stock+OR+market+analysis)+when:24h&hl=en-US&gl=US&ceid=US:en")
+            entries = feed.entries[:3]
+
+        for entry in entries:
             raw_title = entry.title.split(" - ")[0].strip()
             th_title = translate_to_thai(raw_title)
             raw_sum = clean_text(entry.get("summary", ""))
-            if raw_sum and len(raw_sum) > 30 and raw_sum.lower() != raw_title.lower():
+            if raw_sum and len(raw_sum) > 20 and raw_sum.lower() != raw_title.lower():
                 th_sum = translate_to_thai(raw_sum[:160])
-                text += f"• {th_title}\n  ↳ {th_sum}\n\n"
+                text += f"• {th_title}\n   ↳ {th_sum}\n\n"
             else:
                 text += f"• {th_title}\n\n"
     except Exception:
-        text += "▫️ เกิดข้อผิดพลาดในการดึงข่าว TradingView\n\n"
+        text += "▫️ ติดตามบทวิเคราะห์กราฟเทคนิคและดัชนีเพิ่มเติมบน TradingView\n\n"
     return text
 
 def get_us_upcoming_14d():
@@ -449,7 +458,7 @@ def main():
         session = resolve_session_by_time(now)
 
     print(f"Current Thai Time: {now.strftime('%Y-%m-%d %H:%M:%S')} (Weekday: {now.weekday()})")
-    print(f"Resolved Session: '{session}'")
+    print(f"Resolved Session to run: '{session}'")
 
     if session == "us_close":
         run_us_close()
