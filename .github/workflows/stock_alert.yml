@@ -13,16 +13,17 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'เลือกรอบที่ต้องการส่ง (all / us_close / thai_morning / us_pre / thai_evening)'
+        description: 'เลือกรอบที่ต้องการส่ง (auto / us_close / thai_morning / us_pre / thai_evening / all)'
         required: true
-        default: 'all'
+        default: 'auto'
         type: choice
         options:
-          - all
+          - auto
           - us_close
           - thai_morning
           - us_pre
           - thai_evening
+          - all
 
 jobs:
   run-alert:
@@ -40,34 +41,10 @@ jobs:
         run: |
           pip install requests yfinance feedparser beautifulsoup4 deep-translator
 
-      # รอบที่ 1: 08:45 น. สหรัฐฯ หลังปิดตลาด
-      - name: Run US Close (08:45 น. ไทย)
-        if: github.event.schedule == '45 1 * * 2-6' || github.event.inputs.target == 'us_close' || github.event.inputs.target == 'all'
+      - name: Run Stock Script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python stock_alert.py --session us_close
-
-      # รอบที่ 2: 09:00 น. ไทย ก่อนเปิดตลาด
-      - name: Run Thai Morning (09:00 น. ไทย)
-        if: github.event.schedule == '0 2 * * 1-5' || github.event.inputs.target == 'thai_morning' || github.event.inputs.target == 'all'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python stock_alert.py --session thai_morning
-
-      # รอบที่ 3: 15:00 น. สหรัฐฯ ก่อนเปิดตลาด
-      - name: Run US Pre-market (15:00 น. ไทย)
-        if: github.event.schedule == '0 8 * * 1-5' || github.event.inputs.target == 'us_pre' || github.event.inputs.target == 'all'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python stock_alert.py --session us_pre
-
-      # รอบที่ 4: 17:00 น. ไทย หลังปิดตลาด
-      - name: Run Thai Evening (17:00 น. ไทย)
-        if: github.event.schedule == '0 10 * * 1-5' || github.event.inputs.target == 'thai_evening' || github.event.inputs.target == 'all'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python stock_alert.py --session thai_evening
+          INPUT_TARGET: ${{ github.event.inputs.target }}
+        run: |
+          python stock_alert.py
