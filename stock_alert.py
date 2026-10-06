@@ -342,7 +342,7 @@ def get_us_upcoming_14d():
         text += "▫️ เกิดข้อผิดพลาดในการดึงข้อมูล\n"
     return text + "\n"
 
-# ==================== 4 รอบการทำงาน ====================
+# ==================== 4 ฟังก์ชันหลัก ====================
 
 def run_us_close():
     now = get_thai_datetime()
@@ -394,18 +394,62 @@ def run_thai_evening():
     send_telegram(msg)
     print(">>> [4/4] ส่งรอบ Thai Evening (17:00 น.) สำเร็จ")
 
+# ==================== ระบบตัดสินรอบเวลา ====================
+
+def resolve_session_by_time(dt):
+    weekday = dt.weekday() # 0=Mon, ..., 4=Fri, 5=Sat, 6=Sun
+    hm = dt.hour * 60 + dt.minute
+    
+    # 08:30 - 08:54 -> us_close (วันอังคาร - วันเสาร์)
+    if 510 <= hm < 535:
+        if weekday in [1, 2, 3, 4, 5]:
+            return "us_close"
+        return "none"
+        
+    # 08:55 - 12:00 -> thai_morning (วันจันทร์ - วันศุกร์)
+    elif 535 <= hm < 720:
+        if weekday in [0, 1, 2, 3, 4]:
+            return "thai_morning"
+        return "none"
+        
+    # 12:00 - 16:15 -> us_pre (วันจันทร์ - วันศุกร์)
+    elif 720 <= hm < 975:
+        if weekday in [0, 1, 2, 3, 4]:
+            return "us_pre"
+        return "none"
+        
+    # 16:15 - 23:59 -> thai_evening (วันจันทร์ - วันศุกร์)
+    elif 975 <= hm:
+        if weekday in [0, 1, 2, 3, 4]:
+            return "thai_evening"
+        return "none"
+        
+    return "none"
+
 def main():
     now = get_thai_datetime()
     is_monday = (now.weekday() == 0)
 
-    # รับคำสั่งตรงจากพารามิเตอร์ --session ที่ GitHub Actions ส่งมา
-    session = None
+    # 1. เช็กค่าจาก CLI Arguments
+    cli_session = None
     if "--session" in sys.argv:
         idx = sys.argv.index("--session")
         if idx + 1 < len(sys.argv):
-            session = sys.argv[idx + 1]
+            cli_session = sys.argv[idx + 1]
 
-    print(f"Executing session: {session} at Thai time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    # 2. เช็กค่าจาก Environment Variable
+    env_target = os.environ.get("INPUT_TARGET", "").strip()
+
+    if cli_session:
+        session = cli_session
+    elif env_target and env_target != "auto":
+        session = env_target
+    else:
+        # ตัดสินรอบตามเวลาจริงของไทยโดยอัตโนมัติ
+        session = resolve_session_by_time(now)
+
+    print(f"Current Thai Time: {now.strftime('%Y-%m-%d %H:%M:%S')} (Weekday: {now.weekday()})")
+    print(f"Resolved Session: '{session}'")
 
     if session == "us_close":
         run_us_close()
@@ -415,8 +459,8 @@ def main():
         run_us_pre(is_monday)
     elif session == "thai_evening":
         run_thai_evening()
-    else:
-        print("Unknown or All: running all 4 sessions...")
+    elif session == "all":
+        print("Explicit 'all' requested: running all 4 sessions sequentially...")
         run_us_close()
         time.sleep(3)
         run_thai_morning(is_monday)
@@ -424,6 +468,9 @@ def main():
         run_us_pre(is_monday)
         time.sleep(3)
         run_thai_evening()
+        print("Completed all 4 sessions!")
+    else:
+        print(f"No scheduled action needed at this time window (Session: {session}). Exiting cleanly.")
 
 if __name__ == "__main__":
     main()
