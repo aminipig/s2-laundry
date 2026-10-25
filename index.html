@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-    <!-- นำเข้าโมดูล Supabase Client via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 font-sans antialiased text-gray-800">
@@ -158,7 +157,6 @@
                     <h3 class="text-lg font-semibold text-slate-800">ประวัติรายการในตาราง</h3>
                     <div class="flex flex-wrap items-center gap-4 text-sm w-full sm:w-auto justify-between sm:justify-end">
                         
-                        <!-- ช่องค้นหาพร้อมปุ่มกากบาทเคลียร์ค่า (✕) -->
                         <div class="flex items-center gap-1.5 w-full sm:w-auto">
                             <label for="search-input" class="text-slate-600 shrink-0 font-medium">ค้นหา:</label>
                             <div class="relative w-full sm:w-44 flex items-center">
@@ -217,7 +215,7 @@
         </div>
     </main>
 
-    <!-- สคริปต์การเชื่อมต่อและทำตรรกะระบบด้วย Supabase -->
+    <!-- สคริปต์การเชื่อมต่อและตรรกะระบบด้วย Supabase -->
     <script>
         const SUPABASE_URL = "https://kcrtbxecjcjytnlxgzcv.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU"; 
@@ -590,7 +588,6 @@
             document.getElementById('date').value = `${year}-${month}-${day}`;
         }
 
-        // 🌟 ฟังก์ชันลบรายการ (action = "ลบรายการ")
         window.deleteTransaction = async function(id) {
             const item = window.transactions.find(t => t.id === id);
             if (!item) return;
@@ -685,7 +682,6 @@
         document.getElementById('btn-next').addEventListener('click', () => { if (currentPage < Math.ceil(sortedRecords.length / parseInt(itemsPerPage))) { currentPage++; renderTable(); } });
         document.getElementById('year-filter').addEventListener('change', (e) => { selectedYear = parseInt(e.target.value); dateStartFilter = `${selectedYear}-01-01`; dateEndFilter = `${selectedYear}-12-31`; document.getElementById('filter-start').value = dateStartFilter; document.getElementById('filter-end').value = dateEndFilter; currentPage = 1; updateUI(); });
 
-        // 🌟 ฟังก์ชันส่งฟอร์ม บันทึก/แก้ไข (action = "สร้างรายการใหม่" / "แก้ไขรายการ")
         document.getElementById('finance-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const editId = document.getElementById('edit-id').value;
