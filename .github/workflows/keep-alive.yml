@@ -15,14 +15,14 @@ jobs:
       # ==========================================
       - name: Ping DB - s2-laundry
         run: |
-          curl -s -X POST "https://kcrtbxecjcjytnlxgzcv.supabase.co/rest/v1/rpc/keep_alive_ping" \
+          curl -i -X POST "https://kcrtbxecjcjytnlxgzcv.supabase.co/rest/v1/rpc/keep_alive_ping" \
           -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU" \
           -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU" \
           -H "User-Agent: Mozilla/5.0"
 
       - name: Ping Auth Health - s2-laundry
         run: |
-          curl -s -X GET "https://kcrtbxecjcjytnlxgzcv.supabase.co/auth/v1/health" \
+          curl -i -X GET "https://kcrtbxecjcjytnlxgzcv.supabase.co/auth/v1/health" \
           -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjcnRieGVjamNqeXRubHhnemN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTQxMjksImV4cCI6MjEwMTA3MDEyOX0.B7lLRB8PIFdw4XKskcfliKUUdjMrQkSIi-jw95LRyDU"
 
       # ==========================================
@@ -30,14 +30,14 @@ jobs:
       # ==========================================
       - name: Ping DB - Nkhanthong-dorm
         run: |
-          curl -s -X GET "https://acwldqgljculglalqikp.supabase.co/rest/v1/rooms?select=id&limit=1" \
+          curl -i -X GET "https://acwldqgljculglalqikp.supabase.co/rest/v1/rooms?select=id&limit=1" \
           -H "apikey: sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k" \
           -H "Authorization: Bearer sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k" \
           -H "User-Agent: Mozilla/5.0"
 
       - name: Ping Auth Health - Nkhanthong-dorm
         run: |
-          curl -s -X GET "https://acwldqgljculglalqikp.supabase.co/auth/v1/health" \
+          curl -i -X GET "https://acwldqgljculglalqikp.supabase.co/auth/v1/health" \
           -H "apikey: sb_publishable_cb3LV3vMNYi9qiUNnXvVXA_Rx2ZcY6k"
 
       # ==========================================
@@ -45,12 +45,12 @@ jobs:
       # ==========================================
       - name: Ping DB - salon-accounting
         run: |
-          curl -s -X GET "https://kvusfpielbyxgdrlpowd.supabase.co/rest/v1/booking_slots?select=id&limit=1" \
+          curl -i -X GET "https://kvusfpielbyxgdrlpowd.supabase.co/rest/v1/booking_slots?select=id&limit=1" \
           -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dXNmcGllbGJ5eGdkcmxwb3dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNjY2MTAsImV4cCI6MjEwMDk0MjYxMH0.Jm2oFPBGgoSt7C0C8q8_HggD2_Jm7JfHX1sdj1LDzTQ" \
           -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dXNmcGllbGJ5eGdkcmxwb3dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNjY2MTAsImV4cCI6MjEwMDk0MjYxMH0.Jm2oFPBGgoSt7C0C8q8_HggD2_Jm7JfHX1sdj1LDzTQ" \
           -H "User-Agent: Mozilla/5.0"
 
       - name: Ping Auth Health - salon-accounting
         run: |
-          curl -s -X GET "https://kvusfpielbyxgdrlpowd.supabase.co/auth/v1/health" \
+          curl -i -X GET "https://kvusfpielbyxgdrlpowd.supabase.co/auth/v1/health" \
           -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2dXNmcGllbGJ5eGdkcmxwb3dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzNjY2MTAsImV4cCI6MjEwMDk0MjYxMH0.Jm2oFPBGgoSt7C0C8q8_HggD2_Jm7JfHX1sdj1LDzTQ"
